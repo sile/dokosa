@@ -16,18 +16,21 @@ impl Chunker {
 
     pub fn apply(&self, input: &str) -> Vec<Chunk<String>> {
         let mut chunks = Vec::new();
-        for (i, lines) in input
-            .lines()
-            .collect::<Vec<_>>()
-            .windows(self.window_size.get())
-            .enumerate()
-        {
+        let lines = input.lines().collect::<Vec<_>>();
+        for (i, lines) in lines.windows(self.window_size.get()).enumerate() {
             if i % self.step_size.get() != 0 {
                 continue;
             }
 
             chunks.push(Chunk {
                 line: i,
+                data: lines.join("\n"),
+            });
+        }
+        if chunks.is_empty() {
+            assert!(lines.len() < self.window_size.get());
+            chunks.push(Chunk {
+                line: 0,
                 data: lines.join("\n"),
             });
         }
