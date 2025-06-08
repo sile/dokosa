@@ -26,7 +26,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
     let embedder = Embedder::new(api_key, model);
     let embeddings = embedder.embed(&[input]).or_fail()?;
-    println!("{}", nojson::Json(&embeddings));
+    println!("{}", nojson::Json(&embeddings[0]));
 
     Ok(())
 }
