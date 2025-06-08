@@ -25,8 +25,8 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     std::io::stdin().read_to_string(&mut input).or_fail()?;
 
     let embedder = Embedder::new(api_key, model);
-    let result_json_text = embedder.embed(&[input]).or_fail()?;
-    println!("{}", result_json_text);
+    let embeddings = embedder.embed(&[input]).or_fail()?;
+    println!("{}", nojson::Json(&embeddings));
 
     Ok(())
 }
