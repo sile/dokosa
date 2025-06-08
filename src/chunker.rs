@@ -48,3 +48,30 @@ pub struct Chunk<T> {
     pub line: usize,
     pub data: T,
 }
+
+impl<T> nojson::DisplayJson for Chunk<T>
+where
+    T: nojson::DisplayJson,
+{
+    fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
+        f.object(|f| {
+            f.member("line", &self.line)?;
+            f.member("data", &self.data)
+        })
+    }
+}
+
+impl<'text, T> nojson::FromRawJsonValue<'text> for Chunk<T>
+where
+    T: nojson::FromRawJsonValue<'text>,
+{
+    fn from_raw_json_value(
+        value: nojson::RawJsonValue<'text, '_>,
+    ) -> Result<Self, nojson::JsonParseError> {
+        let ([line, data], []) = value.to_fixed_object(["line", "data"], [])?;
+        Ok(Chunk {
+            line: line.try_to()?,
+            data: data.try_to()?,
+        })
+    }
+}
