@@ -1,4 +1,4 @@
-# saguru
+# saguru (or dokoda)
 
 ## Basic Example
 
@@ -24,7 +24,7 @@ curl https://api.openai.com/v1/embeddings \
       "I love machine learning",
       "OpenAI creates powerful AI models"
     ],
-    "model": "text-embedding-3-small"
+    "model":  "text-embedding-3-small"
   }'
 ```
 
