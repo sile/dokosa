@@ -13,6 +13,26 @@ impl Chunker {
             step_size: NonZeroUsize::MIN.saturating_add(49),
         }
     }
+
+    pub fn apply(&self, input: &str) -> Vec<Chunk<String>> {
+        let mut chunks = Vec::new();
+        for (i, lines) in input
+            .lines()
+            .collect::<Vec<_>>()
+            .windows(self.window_size.get())
+            .enumerate()
+        {
+            if i % self.step_size.get() != 0 {
+                continue;
+            }
+
+            chunks.push(Chunk {
+                line: i,
+                data: lines.join("\n"),
+            });
+        }
+        chunks
+    }
 }
 
 #[derive(Debug)]
@@ -25,6 +45,6 @@ pub struct ChunkedFile<T> {
 
 #[derive(Debug)]
 pub struct Chunk<T> {
-    pub line: NonZeroUsize,
+    pub line: usize,
     pub data: T,
 }

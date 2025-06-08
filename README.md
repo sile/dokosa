@@ -1,4 +1,4 @@
-# saguru (or dokoda)
+# saguru (or dokoda or dokosa)
 
 ## Basic Example
 
