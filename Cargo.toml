@@ -1,0 +1,9 @@
+[package]
+name = "saguru"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+noargs = "0.3.2"
+nojson = "0.1.2"
+orfail = "1.1.0"
