@@ -1,4 +1,6 @@
-use std::{num::NonZeroUsize, path::PathBuf, time::Duration};
+use std::{num::NonZeroUsize, path::PathBuf};
+
+use crate::embedder::Embedding;
 
 #[derive(Debug)]
 pub struct Chunker {
@@ -39,11 +41,16 @@ impl Chunker {
 }
 
 #[derive(Debug)]
-pub struct ChunkedFile<T> {
+pub struct Repository {
     pub path: PathBuf,
-    pub time: Duration,
-    pub labels: Vec<String>,
-    pub chunks: Vec<Chunk<T>>,
+    pub commit: String,
+    pub files: ChunkedFile,
+}
+
+#[derive(Debug)]
+pub struct ChunkedFile {
+    pub path: PathBuf,
+    pub chunks: Vec<Chunk<Embedding>>,
 }
 
 #[derive(Debug)]
