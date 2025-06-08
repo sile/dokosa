@@ -1,2 +1,2 @@
-pub mod subcommand_tokenize;
-pub mod tokenizer;
+pub mod chunker;
+pub mod subcommand_chunk;

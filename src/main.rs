@@ -10,7 +10,8 @@ fn main() -> noargs::Result<()> {
     }
     noargs::HELP_FLAG.take_help(&mut args);
 
-    if noargs::cmd("tokenize").take(&mut args).is_present() {
+    if noargs::cmd("chunk").take(&mut args).is_present() {
+        saguru::subcommand_chunk::run(args)?;
     } else if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
