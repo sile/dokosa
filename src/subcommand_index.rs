@@ -2,7 +2,11 @@ use std::path::PathBuf;
 
 use orfail::OrFail;
 
-use crate::{chunker::Chunker, embedder::Embedder, git::GitRepository};
+use crate::{
+    chunker::{Chunk, Chunker},
+    embedder::Embedder,
+    git::GitRepository,
+};
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let repository_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
@@ -43,7 +47,18 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
             continue;
         }
 
-        let chunk = chunker.apply(&content);
+        let chunks = chunker.apply(&content);
+        let inputs = chunks.iter().map(|c| c.data.clone()).collect::<Vec<_>>(); // TODO: remove clone
+        let embeddings = embedder.embed(&inputs).or_fail()?;
+        let chunks = chunks
+            .iter()
+            .zip(embeddings)
+            .map(|(c, e)| Chunk {
+                line: c.line,
+                data: e,
+            })
+            .collect::<Vec<_>>();
+        dbg!(chunks);
     }
 
     Ok(())
