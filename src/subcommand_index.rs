@@ -41,11 +41,11 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     for file_path in repo.files().or_fail()? {
         println!("# FILE: {}", file_path.display());
 
-        let mut content = String::new();
-        if let Err(e) = std::fs::read_to_string(&mut content) {
-            eprintln!("Failed to read file {}: {}", file_path.display(), e);
+        let Ok(content) = std::fs::read_to_string(&file_path)
+            .inspect_err(|e| eprintln!("Failed to read file {}: {}", file_path.display(), e))
+        else {
             continue;
-        }
+        };
 
         let chunks = chunker.apply(&content);
         let inputs = chunks.iter().map(|c| c.data.clone()).collect::<Vec<_>>(); // TODO: remove clone
