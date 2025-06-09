@@ -3,6 +3,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use orfail::OrFail;
+
 use crate::{chunker::Chunk, embedder::Embedding};
 
 #[derive(Debug)]
@@ -15,13 +17,26 @@ impl IndexFile {
     pub fn load_or_create<P: AsRef<Path>>(path: P) -> orfail::Result<Self> {
         let path = path.as_ref().to_path_buf();
         if path.exists() {
-            todo!()
+            let json = std::fs::read_to_string(&path).or_fail()?;
+            Ok(Self {
+                path,
+                repositories: json.parse().map(|nojson::Json(v)| v).or_fail()?,
+            })
         } else {
             Ok(Self {
                 path,
                 repositories: BTreeMap::new(),
             })
         }
+    }
+
+    pub fn save(&self) -> orfail::Result<()> {
+        let json = nojson::json(|f| {
+            f.object(|f| f.members(self.repositories.iter().map(|x| (x.0.display(), x.1))))
+        })
+        .to_string();
+        std::fs::write(&self.path, json).or_fail()?;
+        Ok(())
     }
 }
 
