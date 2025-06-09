@@ -14,6 +14,8 @@ fn main() -> noargs::Result<()> {
         saguru::subcommand_embed::run(args)?;
     } else if noargs::cmd("chunk").take(&mut args).is_present() {
         saguru::subcommand_chunk::run(args)?;
+    } else if noargs::cmd("index").take(&mut args).is_present() {
+        saguru::subcommand_index::run(args)?;
     } else if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
