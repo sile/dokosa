@@ -7,7 +7,7 @@ use orfail::OrFail;
 
 #[derive(Debug)]
 pub struct GitRepository {
-    root_dir: PathBuf,
+    pub root_dir: PathBuf,
 }
 
 impl GitRepository {

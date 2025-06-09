@@ -30,6 +30,10 @@ impl IndexFile {
         }
     }
 
+    pub fn add(&mut self, repo: IndexedRepository) {
+        self.repositories.insert(repo.path.clone(), repo);
+    }
+
     pub fn save(&self) -> orfail::Result<()> {
         let json = nojson::json(|f| {
             f.object(|f| f.members(self.repositories.iter().map(|x| (x.0.display(), x.1))))
@@ -44,7 +48,7 @@ impl IndexFile {
 pub struct IndexedRepository {
     pub path: PathBuf,
     pub commit: String,
-    pub files: ChunkedFile,
+    pub files: Vec<ChunkedFile>,
 }
 
 impl nojson::DisplayJson for IndexedRepository {

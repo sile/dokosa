@@ -6,6 +6,7 @@ use crate::{
     chunker::{Chunk, Chunker},
     embedder::Embedder,
     git::GitRepository,
+    index::{ChunkedFile, IndexFile, IndexedRepository},
 };
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
@@ -34,10 +35,12 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         return Ok(());
     }
 
+    let mut indexer = IndexFile::load_or_create(&index_path).or_fail()?;
     let repo = GitRepository::new(repository_path).or_fail()?;
     let chunker = Chunker::new();
     let embedder = Embedder::new(api_key, model);
 
+    let mut files = Vec::new();
     for file_path in repo.files().or_fail()? {
         println!("# FILE: {}", file_path.display());
 
@@ -58,8 +61,20 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                 data: e,
             })
             .collect::<Vec<_>>();
-        dbg!(chunks);
+        files.push(ChunkedFile {
+            path: file_path, // TODO: relative path
+            chunks,
+        });
     }
+
+    indexer.add(IndexedRepository {
+        path: repo.root_dir.clone(),
+        commit: repo.commit_hash().or_fail()?,
+        files,
+    });
+
+    eprintln!("# SAVE");
+    indexer.save().or_fail()?;
 
     Ok(())
 }
