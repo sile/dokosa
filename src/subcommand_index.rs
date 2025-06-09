@@ -35,6 +35,8 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let embedder = Embedder::new(api_key, model);
 
     for file_path in repo.files().or_fail()? {
+        println!("# FILE: {}", file_path.display());
+
         let mut content = String::new();
         if let Err(e) = std::fs::read_to_string(&mut content) {
             eprintln!("Failed to read file {}: {}", file_path.display(), e);

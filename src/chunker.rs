@@ -1,6 +1,6 @@
-use std::{num::NonZeroUsize, path::PathBuf};
+use std::num::NonZeroUsize;
 
-use crate::embedder::Embedding;
+use crate::embedder::{Embedder, Embedding};
 
 #[derive(Debug)]
 pub struct Chunker {
@@ -41,22 +41,15 @@ impl Chunker {
 }
 
 #[derive(Debug)]
-pub struct Repository {
-    pub path: PathBuf,
-    pub commit: String,
-    pub files: ChunkedFile,
-}
-
-#[derive(Debug)]
-pub struct ChunkedFile {
-    pub path: PathBuf,
-    pub chunks: Vec<Chunk<Embedding>>,
-}
-
-#[derive(Debug)]
 pub struct Chunk<T> {
     pub line: usize,
     pub data: T,
+}
+
+impl Chunk<String> {
+    pub fn to_embedding(&self, embedder: &Embedder) -> orfail::Result<Chunk<Embedding>> {
+        todo!()
+    }
 }
 
 impl<T> nojson::DisplayJson for Chunk<T>
