@@ -1,8 +1,8 @@
-use std::{io::Read, path::PathBuf};
+use std::path::PathBuf;
 
 use orfail::OrFail;
 
-use crate::chunker::Chunker;
+use crate::git::GitRepository;
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let repository_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
@@ -19,12 +19,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         return Ok(());
     }
 
-    let chunker = Chunker::new();
-    let mut input = String::new();
-    std::io::stdin().read_to_string(&mut input).or_fail()?;
-    let chunks = chunker.apply(&input);
-
-    println!("{}", nojson::Json(chunks));
+    let repo = GitRepository::new(repository_path).or_fail()?;
 
     Ok(())
 }
