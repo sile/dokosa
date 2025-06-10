@@ -8,7 +8,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let index_path: PathBuf = noargs::opt("index-file")
         .short('i')
         .env("SAGURU_INDEX_FILE")
-        .default(".saguru")
+        .default(".dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let count: usize = noargs::opt("count")

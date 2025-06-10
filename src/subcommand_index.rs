@@ -16,7 +16,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .then(|a| a.value().parse())?;
     let index_path: PathBuf = noargs::opt("index-file")
         .env("SAGURU_INDEX_FILE")
-        .default(".saguru")
+        .default(".dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let api_key: String = noargs::opt("openai-api-key")
