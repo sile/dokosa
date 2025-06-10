@@ -42,6 +42,16 @@ impl IndexFile {
         std::fs::write(&self.path, json).or_fail()?;
         Ok(())
     }
+
+    pub fn search(&self, query: &Embedding, count: usize) -> Vec<Chunk<ChunkInfo>> {
+        todo!("calculate cosine similarity and return top-{count} result")
+    }
+}
+
+#[derive(Debug)]
+pub struct ChunkInfo {
+    pub file_path: PathBuf,
+    pub similarity: f64,
 }
 
 #[derive(Debug)]
