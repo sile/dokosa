@@ -52,7 +52,13 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
         let chunks = chunker.apply(&content);
         let inputs = chunks.iter().map(|c| c.data.clone()).collect::<Vec<_>>(); // TODO: remove clone
-        let embeddings = embedder.embed(&inputs).or_fail()?;
+        let Ok(embeddings) = embedder
+            .embed(&inputs)
+            .or_fail()
+            .inspect_err(|e| eprintln!("Failed to embed: {e}"))
+        else {
+            continue;
+        };
         let chunks = chunks
             .iter()
             .zip(embeddings)

@@ -47,7 +47,12 @@ impl Embedder {
         let response = String::from_utf8(output.stdout)
             .or_fail_with(|e| format!("Failed to parse curl response as UTF-8: {e}"))?;
         let response = nojson::RawJson::parse(&response).or_fail()?;
-        let ([data], []) = response.value().to_fixed_object(["data"], []).or_fail()?;
+        let ([data], []) = response
+            .value()
+            .to_fixed_object(["data"], [])
+            .or_fail_with(|e| {
+                format!("Unexpected embeddings API response: {e}\n\nJSON:\n{response}\n")
+            })?;
 
         let mut embeddings = vec![Embedding::default(); input_texts.len()];
         for object in data.to_array().or_fail()? {
