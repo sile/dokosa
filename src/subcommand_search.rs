@@ -7,7 +7,7 @@ use crate::{embedder::Embedder, index::IndexFile};
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let index_path: PathBuf = noargs::opt("index-file")
         .short('i')
-        .env("SAGURU_INDEX_FILE")
+        .env("DOKOSA_INDEX_PATH")
         .default(".dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
