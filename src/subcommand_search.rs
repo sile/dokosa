@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io::Read, path::PathBuf};
 
 use orfail::OrFail;
 
@@ -29,6 +29,11 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
     let indexer = IndexFile::load_or_create(&index_path).or_fail()?;
     let embedder = Embedder::new(api_key, model);
+
+    let mut query = String::new();
+    std::io::stdin().read_to_string(&mut query).or_fail()?;
+
+    let embedding = embedder.embed(&[query]).or_fail()?.remove(0);
 
     Ok(())
 }
