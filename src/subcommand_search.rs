@@ -11,6 +11,12 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .default(".saguru")
         .take(&mut args)
         .then(|a| a.value().parse())?;
+    let count: usize = noargs::opt("count")
+        .short('c')
+        .default("10")
+        .take(&mut args)
+        .then(|a| a.value().parse())?;
+    // TODO: similiarity_threshold
     let api_key: String = noargs::opt("openai-api-key")
         .ty("STRING")
         .example("YOUR_API_KEY")
