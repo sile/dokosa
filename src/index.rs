@@ -43,7 +43,12 @@ impl IndexFile {
         Ok(())
     }
 
-    pub fn search(&self, query: &Embedding, count: usize) -> Vec<Chunk<ChunkInfo>> {
+    pub fn search(
+        &self,
+        query: &Embedding,
+        count: usize,
+        similarity_threshold: f64,
+    ) -> Vec<Chunk<ChunkInfo>> {
         let mut candidates = Vec::new();
 
         // Collect all chunks with their similarity scores
@@ -51,6 +56,9 @@ impl IndexFile {
             for file in &repo.files {
                 for chunk in &file.chunks {
                     let similarity = self.cosine_similarity(query, &chunk.data);
+                    if similarity < similarity_threshold {
+                        continue;
+                    }
                     candidates.push(Chunk {
                         line: chunk.line,
                         data: ChunkInfo {

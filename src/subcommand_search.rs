@@ -16,7 +16,13 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .default("10")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    // TODO: similiarity_threshold
+    let similarity_threshold: f64 = noargs::opt("similarity-threshold")
+        .short('t')
+        .ty("FLOAT")
+        .default("0.3")
+        .doc("Minimum similarity score (0.0 to 1.0) for results to be included")
+        .take(&mut args)
+        .then(|a| a.value().parse())?;
     let api_key: String = noargs::opt("openai-api-key")
         .ty("STRING")
         .example("YOUR_API_KEY")
@@ -40,7 +46,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     std::io::stdin().read_to_string(&mut query).or_fail()?;
 
     let embedding = embedder.embed(&[query]).or_fail()?.remove(0);
-    let chunks = indexer.search(&embedding, count);
+    let chunks = indexer.search(&embedding, count, similarity_threshold);
     dbg!(chunks);
 
     Ok(())
