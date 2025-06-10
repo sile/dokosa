@@ -48,11 +48,11 @@ impl IndexFile {
         query: &Embedding,
         count: usize,
         similarity_threshold: f64,
-    ) -> Vec<Chunk<ChunkInfo>> {
+    ) -> orfail::Result<Vec<Chunk<ChunkInfo>>> {
         let mut candidates = Vec::new();
 
         // Collect all chunks with their similarity scores
-        for repo in self.repositories.values() {
+        for (root_dir, repo) in self.repositories.iter() {
             for file in &repo.files {
                 for chunk in &file.chunks {
                     let similarity = self.cosine_similarity(query, &chunk.data);
@@ -64,6 +64,12 @@ impl IndexFile {
                         data: ChunkInfo {
                             file_path: file.path.clone(), // TODO: remove clone
                             similarity,
+                            relative_file_path: root_dir
+                                .parent()
+                                .or_fail()?
+                                .strip_prefix(&file.path)
+                                .or_fail()?
+                                .to_path_buf(),
                         },
                     });
                 }
@@ -77,7 +83,7 @@ impl IndexFile {
                 .partial_cmp(&a.data.similarity)
                 .expect("TODO")
         });
-        candidates.into_iter().take(count).collect()
+        Ok(candidates.into_iter().take(count).collect())
     }
 
     fn cosine_similarity(&self, a: &Embedding, b: &Embedding) -> f64 {
@@ -103,6 +109,7 @@ impl IndexFile {
 #[derive(Debug)]
 pub struct ChunkInfo {
     pub file_path: PathBuf,
+    pub relative_file_path: PathBuf,
     pub similarity: f64,
 }
 

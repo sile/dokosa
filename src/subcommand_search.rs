@@ -46,8 +46,45 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     std::io::stdin().read_to_string(&mut query).or_fail()?;
 
     let embedding = embedder.embed(&[query]).or_fail()?.remove(0);
-    let chunks = indexer.search(&embedding, count, similarity_threshold);
-    dbg!(chunks);
+    let chunks = indexer
+        .search(&embedding, count, similarity_threshold)
+        .or_fail()?;
 
+    let mut contents = Vec::new();
+    for chunk in chunks {
+        let content = std::fs::read_to_string(&chunk.data.file_path).or_fail()?;
+        contents.push(SimilarContent {
+            similarity: chunk.data.similarity,
+            path: chunk.data.relative_file_path,
+            line: chunk.line,
+            content: content
+                .lines()
+                .skip(chunk.line)
+                .take(100) // TODO: remove magic value
+                .collect::<Vec<_>>()
+                .join("\n"),
+        });
+    }
+
+    println!("{}", nojson::Json(&contents));
     Ok(())
+}
+
+#[derive(Debug)]
+struct SimilarContent {
+    similarity: f64,
+    path: PathBuf,
+    line: usize,
+    content: String,
+}
+
+impl nojson::DisplayJson for SimilarContent {
+    fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
+        f.object(|f| {
+            f.member("similarity", self.similarity)?;
+            f.member("path", &self.path)?;
+            f.member("line", self.line)?;
+            f.member("content", &self.content)
+        })
+    }
 }
