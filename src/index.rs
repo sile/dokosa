@@ -44,7 +44,51 @@ impl IndexFile {
     }
 
     pub fn search(&self, query: &Embedding, count: usize) -> Vec<Chunk<ChunkInfo>> {
-        todo!("calculate cosine similarity and return top-{count} result")
+        let mut candidates = Vec::new();
+
+        // Collect all chunks with their similarity scores
+        for repo in self.repositories.values() {
+            for file in &repo.files {
+                for chunk in &file.chunks {
+                    let similarity = self.cosine_similarity(query, &chunk.data);
+                    candidates.push(Chunk {
+                        line: chunk.line,
+                        data: ChunkInfo {
+                            file_path: file.path.clone(), // TODO: remove clone
+                            similarity,
+                        },
+                    });
+                }
+            }
+        }
+
+        // Sort by similarity (highest first) and take top count
+        candidates.sort_by(|a, b| {
+            b.data
+                .similarity
+                .partial_cmp(&a.data.similarity)
+                .expect("TODO")
+        });
+        candidates.into_iter().take(count).collect()
+    }
+
+    fn cosine_similarity(&self, a: &Embedding, b: &Embedding) -> f64 {
+        let a_vec = &a.0;
+        let b_vec = &b.0;
+
+        if a_vec.len() != b_vec.len() {
+            return 0.0;
+        }
+
+        let dot_product: f64 = a_vec.iter().zip(b_vec.iter()).map(|(x, y)| x * y).sum();
+        let norm_a: f64 = a_vec.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm_b: f64 = b_vec.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+        if norm_a == 0.0 || norm_b == 0.0 {
+            return 0.0;
+        }
+
+        dot_product / (norm_a * norm_b)
     }
 }
 
