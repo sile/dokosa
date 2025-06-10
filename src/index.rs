@@ -64,10 +64,9 @@ impl IndexFile {
                         data: ChunkInfo {
                             file_path: file.path.clone(), // TODO: remove clone
                             similarity,
-                            relative_file_path: root_dir
-                                .parent()
-                                .or_fail()?
-                                .strip_prefix(&file.path)
+                            relative_file_path: file
+                                .path
+                                .strip_prefix(root_dir.parent().or_fail()?)
                                 .or_fail()?
                                 .to_path_buf(),
                         },
