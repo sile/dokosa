@@ -40,6 +40,8 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     std::io::stdin().read_to_string(&mut query).or_fail()?;
 
     let embedding = embedder.embed(&[query]).or_fail()?.remove(0);
+    let chunks = indexer.search(&embedding, count);
+    dbg!(chunks);
 
     Ok(())
 }
