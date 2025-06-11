@@ -14,9 +14,10 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .example("/path/to/git/repository/")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    let index_path: PathBuf = noargs::opt("index")
+    let index_file_path: PathBuf = noargs::opt("index-file")
+        .short('i')
         .ty("PATH")
-        .env("DOKOSA_INDEX_PATH")
+        .env("DOKOSA_INDEX_FILE")
         .example("/path/to/.dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
@@ -26,7 +27,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .env("OPENAI_API_KEY")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    let model: String = noargs::opt("model")
+    let model: String = noargs::opt("embedding-model")
         .ty("STRING")
         .default("text-embedding-3-small")
         .take(&mut args)
@@ -36,52 +37,52 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         return Ok(());
     }
 
-    let mut indexer = IndexFile::load_or_create(&index_path).or_fail()?;
-    let repo = GitRepository::new(repository_path).or_fail()?;
-    let chunker = Chunker::new();
-    let embedder = Embedder::new(api_key, model);
+    // let mut indexer = IndexFile::load_or_create(&index_path).or_fail()?;
+    // let repo = GitRepository::new(repository_path).or_fail()?;
+    // let chunker = Chunker::new();
+    // let embedder = Embedder::new(api_key, model);
 
-    let mut files = Vec::new();
-    for file_path in repo.files().or_fail()? {
-        println!("# FILE: {}", file_path.display());
+    // let mut files = Vec::new();
+    // for file_path in repo.files().or_fail()? {
+    //     println!("# FILE: {}", file_path.display());
 
-        let Ok(content) = std::fs::read_to_string(&file_path)
-            .inspect_err(|e| eprintln!("Failed to read file {}: {}", file_path.display(), e))
-        else {
-            continue;
-        };
+    //     let Ok(content) = std::fs::read_to_string(&file_path)
+    //         .inspect_err(|e| eprintln!("Failed to read file {}: {}", file_path.display(), e))
+    //     else {
+    //         continue;
+    //     };
 
-        let chunks = chunker.apply(&content);
-        let inputs = chunks.iter().map(|c| c.data.clone()).collect::<Vec<_>>(); // TODO: remove clone
-        let Ok(embeddings) = embedder
-            .embed(&inputs)
-            .or_fail()
-            .inspect_err(|e| eprintln!("Failed to embed: {e}"))
-        else {
-            continue;
-        };
-        let chunks = chunks
-            .iter()
-            .zip(embeddings)
-            .map(|(c, e)| Chunk {
-                line: c.line,
-                data: e,
-            })
-            .collect::<Vec<_>>();
-        files.push(ChunkedFile {
-            path: file_path, // TODO: relative path
-            chunks,
-        });
-    }
+    //     let chunks = chunker.apply(&content);
+    //     let inputs = chunks.iter().map(|c| c.data.clone()).collect::<Vec<_>>(); // TODO: remove clone
+    //     let Ok(embeddings) = embedder
+    //         .embed(&inputs)
+    //         .or_fail()
+    //         .inspect_err(|e| eprintln!("Failed to embed: {e}"))
+    //     else {
+    //         continue;
+    //     };
+    //     let chunks = chunks
+    //         .iter()
+    //         .zip(embeddings)
+    //         .map(|(c, e)| Chunk {
+    //             line: c.line,
+    //             data: e,
+    //         })
+    //         .collect::<Vec<_>>();
+    //     files.push(ChunkedFile {
+    //         path: file_path, // TODO: relative path
+    //         chunks,
+    //     });
+    // }
 
-    indexer.add(IndexedRepository {
-        path: repo.root_dir.clone(),
-        commit: repo.commit_hash().or_fail()?,
-        files,
-    });
+    // indexer.add(IndexedRepository {
+    //     path: repo.root_dir.clone(),
+    //     commit: repo.commit_hash().or_fail()?,
+    //     files,
+    // });
 
-    eprintln!("# SAVE");
-    indexer.save().or_fail()?;
+    // eprintln!("# SAVE");
+    // indexer.save().or_fail()?;
 
     Ok(())
 }
