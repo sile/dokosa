@@ -16,7 +16,9 @@ fn main() -> noargs::Result<()> {
     // $ list
     // $ search QUERY
 
-    if noargs::cmd("embed").take(&mut args).is_present() {
+    if noargs::cmd("add").take(&mut args).is_present() {
+        dokosa::subcommand_add::run(args)?;
+    } else if noargs::cmd("embed").take(&mut args).is_present() {
         dokosa::subcommand_embed::run(args)?;
     } else if noargs::cmd("chunk").take(&mut args).is_present() {
         dokosa::subcommand_chunk::run(args)?;
