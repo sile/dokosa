@@ -10,7 +10,12 @@ fn main() -> noargs::Result<()> {
     }
     noargs::HELP_FLAG.take_help(&mut args);
 
-    // add, remove, update, list, search
+    // $ add REPOSITORT_PATH
+    // $ remove REPOSITORY_PATH
+    // $ sync
+    // $ list
+    // $ search QUERY
+
     if noargs::cmd("embed").take(&mut args).is_present() {
         dokosa::subcommand_embed::run(args)?;
     } else if noargs::cmd("chunk").take(&mut args).is_present() {
