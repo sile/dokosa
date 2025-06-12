@@ -39,17 +39,8 @@ pub enum IndexFileEntry {
 impl nojson::DisplayJson for IndexFileEntry {
     fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
         match self {
-            IndexFileEntry::Repository(repo) => f.object(|f| {
-                f.member("type", "repository")?;
-                f.member("path", &repo.path)?;
-                f.member("commit", &repo.commit)
-            }),
-            IndexFileEntry::Chunk(chunk) => f.object(|f| {
-                f.member("type", "chunk")?;
-                f.member("path", &chunk.path)?;
-                f.member("line", chunk.line)?;
-                f.member("embedding", &chunk.embedding)
-            }),
+            IndexFileEntry::Repository(repo) => repo.fmt(f),
+            IndexFileEntry::Chunk(chunk) => chunk.fmt(f),
         }
     }
 }
@@ -82,6 +73,7 @@ pub struct RepositoryEntry {
 impl nojson::DisplayJson for RepositoryEntry {
     fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
         f.object(|f| {
+            f.member("type", "repository")?;
             f.member("path", &self.path)?;
             f.member("commit", &self.commit)
         })
@@ -110,6 +102,7 @@ pub struct ChunkEntry {
 impl nojson::DisplayJson for ChunkEntry {
     fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
         f.object(|f| {
+            f.member("type", "chunk")?;
             f.member("path", &self.path)?;
             f.member("line", self.line)?;
             f.member("embedding", &self.embedding)
