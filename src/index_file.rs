@@ -13,13 +13,13 @@ pub struct IndexFile {
 }
 
 impl IndexFile {
-    pub fn load_or_create<P: AsRef<Path>>(path: P) -> orfail::Result<Self> {
+    pub fn load_or_create<P: AsRef<Path>>(path: P) -> orfail::Result<(bool, Self)> {
         let path = path.as_ref().to_path_buf();
         if path.exists() {
-            Self::load(path).or_fail()
+            Self::load(path).or_fail().map(|this| (false, this))
         } else {
             std::fs::File::create_new(&path).or_fail()?;
-            Ok(Self { path })
+            Ok((true, Self { path }))
         }
     }
 

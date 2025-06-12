@@ -6,11 +6,11 @@ use crate::{
     chunker::{Chunk, Chunker},
     embedder::Embedder,
     git::GitRepository,
-    index::{ChunkedFile, IndexFile, IndexedRepository},
+    index_file::IndexFile,
 };
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
-    let repository_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
+    let repo_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
         .example("/path/to/git/repository/")
         .take(&mut args)
         .then(|a| a.value().parse())?;
@@ -35,6 +35,12 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
+    }
+
+    let repo = GitRepository::new(&repo_path).or_fail()?;
+    let (created, index_file) = IndexFile::load_or_create(&index_file_path).or_fail()?;
+    if created {
+        eprintln!("Created index file: {}", index_file_path.display());
     }
 
     // let mut indexer = IndexFile::load_or_create(&index_path).or_fail()?;
