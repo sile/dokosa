@@ -18,11 +18,11 @@ impl IndexFile {
         if path.exists() {
             Self::load(path).or_fail()
         } else {
+            std::fs::File::create_new(&path).or_fail()?;
             Ok(Self { path })
         }
     }
 
-    // TODO: rename
     pub fn load<P: AsRef<Path>>(path: P) -> orfail::Result<Self> {
         let path = path.as_ref().to_path_buf();
         path.exists().or_fail()?;
