@@ -32,8 +32,45 @@ impl IndexFile {
 
 #[derive(Debug, Clone)]
 pub enum IndexFileEntry {
-    Repository,
-    Chunk,
+    Repository(RepositoryEntry),
+    Chunk(ChunkEntry),
+}
+
+impl nojson::DisplayJson for IndexFileEntry {
+    fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
+        match self {
+            IndexFileEntry::Repository(repo) => f.object(|f| {
+                f.member("type", "repository")?;
+                f.member("path", &repo.path)?;
+                f.member("commit", &repo.commit)
+            }),
+            IndexFileEntry::Chunk(chunk) => f.object(|f| {
+                f.member("type", "chunk")?;
+                f.member("path", &chunk.path)?;
+                f.member("line", chunk.line)?;
+                f.member("embedding", &chunk.embedding)
+            }),
+        }
+    }
+}
+
+impl<'text> nojson::FromRawJsonValue<'text> for IndexFileEntry {
+    fn from_raw_json_value(
+        value: nojson::RawJsonValue<'text, '_>,
+    ) -> Result<Self, nojson::JsonParseError> {
+        let ([entry_type], []) = value.to_fixed_object(["type"], [])?;
+        match entry_type.to_unquoted_string_str()?.as_ref() {
+            "repository" => Ok(IndexFileEntry::Repository(value.try_to()?)),
+            "chunk" => Ok(IndexFileEntry::Chunk(value.try_to()?)),
+            ty => Err(nojson::JsonParseError::invalid_value(
+                value,
+                format!(
+                    "Invalid type field: expected 'repository' or 'chunk', found '{}'",
+                    ty
+                ),
+            )),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
