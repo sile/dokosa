@@ -38,13 +38,18 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     }
 
     let repo = GitRepository::new(&repo_path).or_fail()?;
+    eprintln!("Target repository: {}", repo_path.display());
+
     let (created, index_file) = IndexFile::load_or_create(&index_file_path).or_fail()?;
     if created {
         eprintln!("Created index file: {}", index_file_path.display());
     }
 
-    // let mut indexer = IndexFile::load_or_create(&index_path).or_fail()?;
-    // let repo = GitRepository::new(repository_path).or_fail()?;
+    for r in index_file.repositories() {
+        (r.or_fail()?.path != repo.root_dir)
+            .or_fail_with(|()| "Repository already exists".to_owned())?;
+    }
+
     // let chunker = Chunker::new();
     // let embedder = Embedder::new(api_key, model);
 
