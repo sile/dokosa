@@ -1,4 +1,27 @@
+use std::path::Path;
+
+#[derive(Debug, Clone)]
+pub struct GlobPathPattern {
+    pattern: Vec<char>,
+}
+
+impl GlobPathPattern {
+    pub fn new(pattern: &str) -> Self {
+        Self {
+            pattern: pattern.chars().collect(),
+        }
+    }
+
+    pub fn matches<P: AsRef<Path>>(&self, path: P) -> bool {
+        let Some(s) = path.as_ref().as_os_str().to_str() else {
+            return false;
+        };
+        todo!()
+    }
+}
+
 pub fn glob_matches(s: &str, pattern: &str) -> bool {
+    // TODO: Use Peekable<Chars> instead
     let s_chars: Vec<char> = s.chars().collect();
     let pattern_chars: Vec<char> = pattern.chars().collect();
 
