@@ -8,3 +8,4 @@ pub mod subcommand_chunk;
 pub mod subcommand_embed;
 pub mod subcommand_index;
 pub mod subcommand_search;
+pub mod glob;x
