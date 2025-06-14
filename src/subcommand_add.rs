@@ -7,7 +7,7 @@ use crate::{
     embedder::Embedder,
     git::GitRepository,
     glob::GlobPathPattern,
-    index_file::IndexFile,
+    index_file::{IndexFile, RepositoryEntry},
 };
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
@@ -87,6 +87,13 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
     let commit = repo.commit_hash().or_fail()?;
     eprintln!("Commit hash: {}", commit);
+
+    index_file
+        .append_repository(&RepositoryEntry {
+            path: repo.root_dir.clone(),
+            commit,
+        })
+        .or_fail()?;
 
     let chunker = Chunker::new(chunk_window_size, chunk_step_size);
     let embedder = Embedder::new(api_key, model);
