@@ -3,11 +3,11 @@ use std::{num::NonZeroUsize, path::PathBuf};
 use orfail::OrFail;
 
 use crate::{
-    chunker::{Chunk, Chunker},
+    chunker::Chunker,
     embedder::Embedder,
     git::GitRepository,
     glob::GlobPathPattern,
-    index_file::{IndexFile, RepositoryEntry},
+    index_file::{ChunkEntry, IndexFile, RepositoryEntry},
 };
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
@@ -88,16 +88,18 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let commit = repo.commit_hash().or_fail()?;
     eprintln!("Commit hash: {}", commit);
 
-    index_file
-        .append_repository(&RepositoryEntry {
-            path: repo.root_dir.clone(),
-            commit,
-            chunk_window_size,
-            chunk_step_size,
-            include_files: include_files.clone(),
-            exclude_files: exclude_files.clone(),
-        })
-        .or_fail()?;
+    if !dry_run {
+        index_file
+            .append_repository(&RepositoryEntry {
+                path: repo.root_dir.clone(),
+                commit,
+                chunk_window_size,
+                chunk_step_size,
+                include_files: include_files.clone(),
+                exclude_files: exclude_files.clone(),
+            })
+            .or_fail()?;
+    }
 
     let chunker = Chunker::new(chunk_window_size, chunk_step_size);
     let embedder = Embedder::new(api_key, model);
@@ -112,53 +114,39 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         }
 
         eprintln!("Included file: {}", file_path.display());
+        if dry_run {
+            continue;
+        }
+
+        let Ok(content) = std::fs::read_to_string(&abs_file_path)
+            .or_fail()
+            .inspect_err(|e| eprintln!("  Failed to read file: {}", e))
+        else {
+            continue;
+        };
+
+        let mut chunks = chunker.apply(&content);
+        let inputs = chunks
+            .iter_mut()
+            .map(|c| std::mem::take(&mut c.data))
+            .collect::<Vec<_>>();
+        let Ok(embeddings) = embedder
+            .embed(&inputs)
+            .or_fail()
+            .inspect_err(|e| eprintln!("  Failed to embed: {e}"))
+        else {
+            continue;
+        };
+        for (chunk, embedding) in chunks.iter().zip(embeddings) {
+            index_file
+                .append_chunk(&ChunkEntry {
+                    path: file_path.clone(),
+                    line: chunk.line,
+                    embedding,
+                })
+                .or_fail()?;
+        }
     }
-
-    if dry_run {
-        return Ok(());
-    }
-
-    // let mut files = Vec::new();
-    // for file_path in repo.files().or_fail()? {
-    //     println!("# FILE: {}", file_path.display());
-
-    //     let Ok(content) = std::fs::read_to_string(&file_path)
-    //         .inspect_err(|e| eprintln!("Failed to read file {}: {}", file_path.display(), e))
-    //     else {
-    //         continue;
-    //     };
-
-    //     let chunks = chunker.apply(&content);
-    //     let inputs = chunks.iter().map(|c| c.data.clone()).collect::<Vec<_>>(); // TODO: remove clone
-    //     let Ok(embeddings) = embedder
-    //         .embed(&inputs)
-    //         .or_fail()
-    //         .inspect_err(|e| eprintln!("Failed to embed: {e}"))
-    //     else {
-    //         continue;
-    //     };
-    //     let chunks = chunks
-    //         .iter()
-    //         .zip(embeddings)
-    //         .map(|(c, e)| Chunk {
-    //             line: c.line,
-    //             data: e,
-    //         })
-    //         .collect::<Vec<_>>();
-    //     files.push(ChunkedFile {
-    //         path: file_path, // TODO: relative path
-    //         chunks,
-    //     });
-    // }
-
-    // indexer.add(IndexedRepository {
-    //     path: repo.root_dir.clone(),
-    //     commit: repo.commit_hash().or_fail()?,
-    //     files,
-    // });
-
-    // eprintln!("# SAVE");
-    // indexer.save().or_fail()?;
 
     Ok(())
 }

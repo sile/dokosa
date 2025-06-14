@@ -34,6 +34,10 @@ impl IndexFile {
         self.append(repo).or_fail()
     }
 
+    pub fn append_chunk(&self, chunk: &ChunkEntry) -> orfail::Result<()> {
+        self.append(chunk).or_fail()
+    }
+
     fn append<T: nojson::DisplayJson>(&self, entry: &T) -> orfail::Result<()> {
         let file = std::fs::OpenOptions::new()
             .append(true)
@@ -131,7 +135,6 @@ pub struct RepositoryEntry {
     pub chunk_step_size: NonZeroUsize,
     pub include_files: Vec<GlobPathPattern>,
     pub exclude_files: Vec<GlobPathPattern>,
-    // TODO: update trait impls
 }
 
 impl nojson::DisplayJson for RepositoryEntry {
