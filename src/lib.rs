@@ -5,5 +5,6 @@ pub mod glob;
 pub mod index;
 pub mod index_file;
 pub mod subcommand_add;
+pub mod subcommand_list;
 pub mod subcommand_remove;
 pub mod subcommand_search;

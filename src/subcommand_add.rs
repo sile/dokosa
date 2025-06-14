@@ -148,6 +148,6 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         }
     }
 
-    eprintln!("=> Removed");
+    eprintln!("=> Added");
     Ok(())
 }
