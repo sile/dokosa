@@ -35,5 +35,6 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         return Ok(());
     }
 
+    eprintln!("=> Removed");
     Ok(())
 }
