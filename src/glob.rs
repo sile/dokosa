@@ -40,6 +40,48 @@ impl GlobPathPattern {
     }
 }
 
+impl std::fmt::Display for GlobPathPattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if !self.matches_bos {
+            write!(f, "*")?;
+        }
+        for (i, token) in self.tokens.iter().enumerate() {
+            if i > 0 {
+                write!(f, "*{token}")?;
+            } else {
+                write!(f, "{token}")?;
+            }
+        }
+        if !self.matches_eos {
+            write!(f, "*")?;
+        }
+
+        Ok(())
+    }
+}
+
+impl std::str::FromStr for GlobPathPattern {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::new(s))
+    }
+}
+
+impl nojson::DisplayJson for GlobPathPattern {
+    fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
+        f.string(self)
+    }
+}
+
+impl<'text> nojson::FromRawJsonValue<'text> for GlobPathPattern {
+    fn from_raw_json_value(
+        value: nojson::RawJsonValue<'text, '_>,
+    ) -> Result<Self, nojson::JsonParseError> {
+        value.to_unquoted_string_str().map(|s| Self::new(&*s))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
