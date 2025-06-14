@@ -88,6 +88,9 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let commit = repo.commit_hash().or_fail()?;
     eprintln!("Commit hash: {}", commit);
 
+    let chunker = Chunker::new(chunk_window_size, chunk_step_size);
+    let embedder = Embedder::new(api_key, model);
+
     for file_path in repo.files().or_fail()? {
         let abs_file_path = repo.root_dir.join(&file_path);
         let excluded = exclude_files.iter().any(|p| p.matches(&abs_file_path))
@@ -103,9 +106,6 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     if dry_run {
         return Ok(());
     }
-
-    // let chunker = Chunker::new();
-    // let embedder = Embedder::new(api_key, model);
 
     // let mut files = Vec::new();
     // for file_path in repo.files().or_fail()? {

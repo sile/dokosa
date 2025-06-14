@@ -22,8 +22,6 @@ fn main() -> noargs::Result<()> {
         dokosa::subcommand_embed::run(args)?;
     } else if noargs::cmd("chunk").take(&mut args).is_present() {
         dokosa::subcommand_chunk::run(args)?;
-    } else if noargs::cmd("index").take(&mut args).is_present() {
-        dokosa::subcommand_index::run(args)?;
     } else if noargs::cmd("search").take(&mut args).is_present() {
         dokosa::subcommand_search::run(args)?;
     } else if let Some(help) = args.finish()? {

@@ -7,10 +7,10 @@ pub struct Chunker {
 }
 
 impl Chunker {
-    pub fn new() -> Self {
+    pub fn new(window_size: NonZeroUsize, step_size: NonZeroUsize) -> Self {
         Self {
-            window_size: NonZeroUsize::MIN.saturating_add(99),
-            step_size: NonZeroUsize::MIN.saturating_add(49),
+            window_size,
+            step_size,
         }
     }
 
