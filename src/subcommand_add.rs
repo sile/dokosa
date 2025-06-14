@@ -55,6 +55,9 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     {
         include_files.push(GlobPathPattern::new(a.value()));
     }
+    if include_files.is_empty() {
+        include_files.push(GlobPathPattern::new("*"));
+    }
     let mut exclude_files = Vec::new();
     while let Some(a) = noargs::opt("exclude-files")
         .short('E')
@@ -80,6 +83,25 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     for r in index_file.repositories() {
         (r.or_fail()?.path != repo.root_dir)
             .or_fail_with(|()| "Repository already exists".to_owned())?;
+    }
+
+    let commit = repo.commit_hash().or_fail()?;
+    eprintln!("Commit hash: {}", commit);
+
+    for file_path in repo.files().or_fail()? {
+        let abs_file_path = repo.root_dir.join(&file_path);
+        let excluded = exclude_files.iter().any(|p| p.matches(&abs_file_path))
+            || include_files.iter().all(|p| !p.matches(&abs_file_path));
+        if excluded {
+            eprintln!("Excluded file: {}", file_path.display());
+            continue;
+        }
+
+        eprintln!("Included file: {}", file_path.display());
+    }
+
+    if dry_run {
+        return Ok(());
     }
 
     // let chunker = Chunker::new();

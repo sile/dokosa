@@ -89,7 +89,7 @@ impl GitRepository {
         let files: Vec<PathBuf> = files_str
             .lines()
             .filter(|line| !line.trim().is_empty())
-            .map(|line| self.root_dir.join(line.trim()))
+            .map(|line| PathBuf::from(line.trim()))
             .collect();
 
         Ok(files)
