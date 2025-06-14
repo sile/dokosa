@@ -2,61 +2,51 @@ use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct GlobPathPattern {
-    pattern: Vec<char>,
+    tokens: Vec<String>,
+    matches_bos: bool,
+    matches_eos: bool,
 }
 
 impl GlobPathPattern {
     pub fn new(pattern: &str) -> Self {
         Self {
-            pattern: pattern.chars().collect(),
+            matches_bos: !pattern.starts_with('*'),
+            matches_eos: !pattern.ends_with('*'),
+            tokens: pattern.split('*').map(|s| s.to_owned()).collect(),
         }
     }
 
     pub fn matches<P: AsRef<Path>>(&self, path: P) -> bool {
-        let Some(s) = path.as_ref().as_os_str().to_str() else {
+        let Some(mut s) = path.as_ref().as_os_str().to_str() else {
             return false;
         };
-        todo!()
-    }
-}
 
-pub fn glob_matches(s: &str, pattern: &str) -> bool {
-    // TODO: Use Peekable<Chars> instead
-    let s_chars: Vec<char> = s.chars().collect();
-    let pattern_chars: Vec<char> = pattern.chars().collect();
-
-    fn matches_helper(s: &[char], pattern: &[char]) -> bool {
-        match (s.is_empty(), pattern.is_empty()) {
-            // Both empty - match
-            (true, true) => true,
-            // String empty but pattern has non-* characters - no match
-            (true, false) => pattern.iter().all(|&c| c == '*'),
-            // Pattern empty but string has characters - no match
-            (false, true) => false,
-            // Both have characters
-            (false, false) => {
-                match pattern[0] {
-                    '*' => {
-                        // Try matching * with empty string (skip the *)
-                        matches_helper(s, &pattern[1..]) ||
-                        // Try matching * with one or more characters
-                        matches_helper(&s[1..], pattern)
-                    }
-                    c => {
-                        // Regular character must match exactly
-                        s[0] == c && matches_helper(&s[1..], &pattern[1..])
-                    }
-                }
-            }
+        let mut tokens = self.tokens.iter();
+        if self.matches_bos {
+            let Some(s0) = tokens.next().and_then(|t| s.strip_prefix(t)) else {
+                return false;
+            };
+            s = s0;
         }
-    }
 
-    matches_helper(&s_chars, &pattern_chars)
+        for token in tokens {
+            let Some(i) = s.find(token) else {
+                return false;
+            };
+            s = &s[i + token.len()..];
+        }
+
+        if self.matches_eos { s.is_empty() } else { true }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn glob_matches(s: &str, pattern: &str) -> bool {
+        GlobPathPattern::new(pattern).matches(s)
+    }
 
     #[test]
     fn test_glob_matches() {
