@@ -49,22 +49,30 @@ impl IndexFile {
         Ok(())
     }
 
-    pub fn repositories(&self) -> Repositories {
-        Repositories {
+    pub fn entries(&self) -> impl Iterator<Item = orfail::Result<IndexFileEntry>> {
+        Entries {
             path: self.path.clone(),
             lines: None,
         }
     }
+
+    pub fn repositories(&self) -> impl Iterator<Item = orfail::Result<RepositoryEntry>> {
+        self.entries().filter_map(|x| match x {
+            Err(e) => Some(Err(e)),
+            Ok(IndexFileEntry::Repository(x)) => Some(Ok(x)),
+            _ => None,
+        })
+    }
 }
 
 #[derive(Debug)]
-pub struct Repositories {
+struct Entries {
     path: PathBuf,
     lines: Option<std::io::Lines<std::io::BufReader<std::fs::File>>>,
 }
 
-impl Repositories {
-    fn next_entry(&mut self) -> orfail::Result<Option<RepositoryEntry>> {
+impl Entries {
+    fn next_entry(&mut self) -> orfail::Result<Option<IndexFileEntry>> {
         let Some(lines) = &mut self.lines else {
             let file = std::fs::File::open(&self.path).or_fail()?;
             let reader = std::io::BufReader::new(file);
@@ -72,21 +80,17 @@ impl Repositories {
             return self.next_entry();
         };
 
-        loop {
-            let Some(line) = lines.next().transpose().or_fail()? else {
-                return Ok(None);
-            };
-            if let IndexFileEntry::Repository(x) =
-                line.parse().map(|nojson::Json(x)| x).or_fail()?
-            {
-                return Ok(Some(x));
-            }
-        }
+        let Some(line) = lines.next().transpose().or_fail()? else {
+            return Ok(None);
+        };
+
+        let entry: IndexFileEntry = line.parse().map(|nojson::Json(x)| x).or_fail()?;
+        Ok(Some(entry))
     }
 }
 
-impl Iterator for Repositories {
-    type Item = orfail::Result<RepositoryEntry>;
+impl Iterator for Entries {
+    type Item = orfail::Result<IndexFileEntry>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.next_entry().or_fail().transpose()
