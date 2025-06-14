@@ -92,6 +92,10 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .append_repository(&RepositoryEntry {
             path: repo.root_dir.clone(),
             commit,
+            chunk_window_size,
+            chunk_step_size,
+            include_files: include_files.clone(),
+            exclude_files: exclude_files.clone(),
         })
         .or_fail()?;
 

@@ -1,11 +1,12 @@
 use std::{
     io::{BufRead, BufWriter, Write},
+    num::NonZeroUsize,
     path::{Path, PathBuf},
 };
 
 use orfail::OrFail;
 
-use crate::embedder::Embedding;
+use crate::{embedder::Embedding, glob::GlobPathPattern};
 
 #[derive(Debug)]
 pub struct IndexFile {
@@ -126,6 +127,11 @@ impl<'text> nojson::FromRawJsonValue<'text> for IndexFileEntry {
 pub struct RepositoryEntry {
     pub path: PathBuf,
     pub commit: String,
+    pub chunk_window_size: NonZeroUsize,
+    pub chunk_step_size: NonZeroUsize,
+    pub include_files: Vec<GlobPathPattern>,
+    pub exclude_files: Vec<GlobPathPattern>,
+    // TODO: update trait impls
 }
 
 impl nojson::DisplayJson for RepositoryEntry {
@@ -133,7 +139,11 @@ impl nojson::DisplayJson for RepositoryEntry {
         f.object(|f| {
             f.member("type", "repository")?;
             f.member("path", &self.path)?;
-            f.member("commit", &self.commit)
+            f.member("commit", &self.commit)?;
+            f.member("chunk_window_size", self.chunk_window_size)?;
+            f.member("chunk_step_size", self.chunk_step_size)?;
+            f.member("include_files", &self.include_files)?;
+            f.member("exclude_files", &self.exclude_files)
         })
     }
 }
@@ -142,10 +152,35 @@ impl<'text> nojson::FromRawJsonValue<'text> for RepositoryEntry {
     fn from_raw_json_value(
         value: nojson::RawJsonValue<'text, '_>,
     ) -> Result<Self, nojson::JsonParseError> {
-        let ([path, commit], []) = value.to_fixed_object(["path", "commit"], [])?;
+        let (
+            [
+                path,
+                commit,
+                chunk_window_size,
+                chunk_step_size,
+                include_files,
+                exclude_files,
+            ],
+            [],
+        ) = value.to_fixed_object(
+            [
+                "path",
+                "commit",
+                "chunk_window_size",
+                "chunk_step_size",
+                "include_files",
+                "exclude_files",
+            ],
+            [],
+        )?;
+
         Ok(Self {
             path: path.try_to()?,
             commit: commit.try_to()?,
+            chunk_window_size: chunk_window_size.try_to()?,
+            chunk_step_size: chunk_step_size.try_to()?,
+            include_files: include_files.try_to()?,
+            exclude_files: exclude_files.try_to()?,
         })
     }
 }
