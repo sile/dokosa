@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{num::NonZeroUsize, path::PathBuf};
 
 use orfail::OrFail;
 
@@ -6,6 +6,7 @@ use crate::{
     chunker::{Chunk, Chunker},
     embedder::Embedder,
     git::GitRepository,
+    glob::GlobPathPattern,
     index_file::IndexFile,
 };
 
@@ -32,7 +33,37 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .default("text-embedding-3-small")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    // --dry-run, --include-files, --exclude-files
+    let chunk_window_size: NonZeroUsize = noargs::opt("chunk-window-size")
+        .short('w')
+        .ty("LINE_COUNT")
+        .default("100")
+        .take(&mut args)
+        .then(|a| a.value().parse())?;
+    let chunk_step_size: NonZeroUsize = noargs::opt("chunk-step-size")
+        .short('s')
+        .ty("LINE_COUNT")
+        .default("50")
+        .take(&mut args)
+        .then(|a| a.value().parse())?;
+    let dry_run = noargs::flag("dry-run").take(&mut args).is_present();
+    let mut include_files = Vec::new();
+    while let Some(a) = noargs::opt("include-files")
+        .short('I')
+        .ty("PATTERN")
+        .take(&mut args)
+        .present()
+    {
+        include_files.push(GlobPathPattern::new(a.value()));
+    }
+    let mut exclude_files = Vec::new();
+    while let Some(a) = noargs::opt("exclude-files")
+        .short('E')
+        .ty("PATTERN")
+        .take(&mut args)
+        .present()
+    {
+        exclude_files.push(GlobPathPattern::new(a.value()));
+    }
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
