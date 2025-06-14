@@ -19,14 +19,19 @@ impl IndexFile {
         if path.exists() {
             Self::load(path).or_fail().map(|this| (false, this))
         } else {
-            std::fs::File::create_new(&path).or_fail()?;
-            Ok((true, Self { path }))
+            Self::create_new(path).or_fail().map(|this| (true, this))
         }
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> orfail::Result<Self> {
         let path = path.as_ref().to_path_buf();
         path.exists().or_fail()?;
+        Ok(Self { path })
+    }
+
+    pub fn create_new<P: AsRef<Path>>(path: P) -> orfail::Result<Self> {
+        let path = path.as_ref().to_path_buf();
+        std::fs::File::create_new(&path).or_fail()?;
         Ok(Self { path })
     }
 
