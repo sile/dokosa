@@ -10,12 +10,6 @@ fn main() -> noargs::Result<()> {
     }
     noargs::HELP_FLAG.take_help(&mut args);
 
-    // $ add REPOSITORT_PATH
-    // $ remove REPOSITORY_PATH
-    // $ sync
-    // $ list
-    // $ search QUERY
-
     if noargs::cmd("add").take(&mut args).is_present() {
         dokosa::subcommand_add::run(args)?;
     } else if noargs::cmd("remove").take(&mut args).is_present() {

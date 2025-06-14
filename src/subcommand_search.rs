@@ -2,17 +2,19 @@ use std::{io::Read, path::PathBuf};
 
 use orfail::OrFail;
 
-use crate::{embedder::Embedder, index::IndexFile};
+use crate::{embedder::Embedder, index_file::IndexFile};
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
-    let index_path: PathBuf = noargs::opt("index-file")
+    let index_file_path: PathBuf = noargs::opt("index-file")
         .short('i')
-        .env("DOKOSA_INDEX_PATH")
-        .default(".dokosa")
+        .ty("PATH")
+        .env("DOKOSA_INDEX_FILE")
+        .example("/path/to/.dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let count: usize = noargs::opt("count")
         .short('c')
+        .ty("NUMBER")
         .default("10")
         .take(&mut args)
         .then(|a| a.value().parse())?;
@@ -29,7 +31,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .env("OPENAI_API_KEY")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    let model: String = noargs::opt("model")
+    let model: String = noargs::opt("embedding-model")
         .ty("STRING")
         .default("text-embedding-3-small")
         .take(&mut args)
@@ -39,14 +41,14 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         return Ok(());
     }
 
-    let indexer = IndexFile::load_or_create(&index_path).or_fail()?;
+    let index_file = IndexFile::load(&index_file_path).or_fail()?;
     let embedder = Embedder::new(api_key, model);
 
     let mut query = String::new();
     std::io::stdin().read_to_string(&mut query).or_fail()?;
 
     let embedding = embedder.embed(&[query]).or_fail()?.remove(0);
-    let chunks = indexer
+    let chunks = index_file
         .search(&embedding, count, similarity_threshold)
         .or_fail()?;
 
