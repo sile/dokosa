@@ -1,5 +1,5 @@
 use std::{
-    io::BufRead,
+    io::{BufRead, BufWriter, Write},
     path::{Path, PathBuf},
 };
 
@@ -27,6 +27,21 @@ impl IndexFile {
         let path = path.as_ref().to_path_buf();
         path.exists().or_fail()?;
         Ok(Self { path })
+    }
+
+    pub fn append_repository(&self, repo: &RepositoryEntry) -> orfail::Result<()> {
+        self.append(repo).or_fail()
+    }
+
+    fn append<T: nojson::DisplayJson>(&self, entry: &T) -> orfail::Result<()> {
+        let file = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&self.path)
+            .or_fail()?;
+        let mut writer = BufWriter::new(file);
+        writeln!(writer, "{}", nojson::Json(entry)).or_fail()?;
+        writer.flush().or_fail()?;
+        Ok(())
     }
 
     pub fn repositories(&self) -> Repositories {
