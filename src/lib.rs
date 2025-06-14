@@ -8,3 +8,4 @@ pub mod subcommand_add;
 pub mod subcommand_list;
 pub mod subcommand_remove;
 pub mod subcommand_search;
+pub mod subcommand_sync;
