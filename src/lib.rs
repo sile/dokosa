@@ -5,6 +5,4 @@ pub mod glob;
 pub mod index;
 pub mod index_file;
 pub mod subcommand_add;
-pub mod subcommand_chunk;
-pub mod subcommand_embed;
 pub mod subcommand_search;

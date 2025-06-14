@@ -18,10 +18,6 @@ fn main() -> noargs::Result<()> {
 
     if noargs::cmd("add").take(&mut args).is_present() {
         dokosa::subcommand_add::run(args)?;
-    } else if noargs::cmd("embed").take(&mut args).is_present() {
-        dokosa::subcommand_embed::run(args)?;
-    } else if noargs::cmd("chunk").take(&mut args).is_present() {
-        dokosa::subcommand_chunk::run(args)?;
     } else if noargs::cmd("search").take(&mut args).is_present() {
         dokosa::subcommand_search::run(args)?;
     } else if let Some(help) = args.finish()? {
