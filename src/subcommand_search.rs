@@ -36,6 +36,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .default("text-embedding-3-small")
         .take(&mut args)
         .then(|a| a.value().parse())?;
+    let strip_text: bool = noargs::flag("strip-text").take(&mut args).is_present();
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
@@ -58,7 +59,11 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
             similarity: chunk.similarity,
             path: chunk.repository_file_path().or_fail()?,
             line: chunk.line,
-            text: chunk.chunk_text().or_fail()?,
+            text: if strip_text {
+                "".to_owned()
+            } else {
+                chunk.chunk_text().or_fail()?
+            },
         });
     }
 
