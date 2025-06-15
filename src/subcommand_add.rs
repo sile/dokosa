@@ -12,45 +12,55 @@ use crate::{
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let repo_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
+        .doc("Path to the Git repository to add to the index")
         .example("/path/to/git/repository/")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let index_file_path: PathBuf = noargs::opt("index-file")
         .short('i')
         .ty("PATH")
+        .doc("Path to the index file where repository data will be stored")
         .env("DOKOSA_INDEX_FILE")
         .example("/path/to/.dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let api_key: String = noargs::opt("openai-api-key")
         .ty("STRING")
+        .doc("OpenAI API key for generating embeddings")
         .example("YOUR_API_KEY")
         .env("OPENAI_API_KEY")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let model: String = noargs::opt("embedding-model")
         .ty("STRING")
+        .doc("OpenAI embedding model to use for text vectorization")
         .default("text-embedding-3-small")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let chunk_window_size: NonZeroUsize = noargs::opt("chunk-window-size")
         .short('w')
         .ty("LINE_COUNT")
+        .doc("Number of lines to include in each text chunk for embedding")
         .default("100")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let chunk_step_size: NonZeroUsize = noargs::opt("chunk-step-size")
         .short('s')
         .ty("LINE_COUNT")
+        .doc("Number of lines to step between overlapping chunks")
         .default("50")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    let dry_run = noargs::flag("dry-run").take(&mut args).is_present();
+    let dry_run = noargs::flag("dry-run")
+        .doc("Show what would be done without actually modifying the index")
+        .take(&mut args)
+        .is_present();
 
     let mut filter = GlobPathFilter::default();
     while let Some(a) = noargs::opt("include-files")
         .short('I')
         .ty("PATTERN")
+        .doc("Include files matching this glob pattern (can be used multiple times)")
         .take(&mut args)
         .present()
     {
@@ -59,6 +69,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     while let Some(a) = noargs::opt("exclude-files")
         .short('E')
         .ty("PATTERN")
+        .doc("Exclude files matching this glob pattern (can be used multiple times)")
         .take(&mut args)
         .present()
     {
