@@ -76,18 +76,25 @@ impl IndexFile {
         similarity_threshold: f64,
     ) -> orfail::Result<Vec<SearchResult>> {
         let mut candidates = Vec::new();
+        let mut repository = None;
 
         // Collect all chunk entries with their similarity scores
         for entry_result in self.entries() {
             let entry = entry_result.or_fail()?;
-            if let IndexFileEntry::Chunk(chunk) = entry {
-                let similarity = self.cosine_similarity(query, &chunk.embedding);
-                if similarity >= similarity_threshold {
-                    candidates.push(SearchResult {
-                        path: chunk.path,
-                        line: chunk.line,
-                        similarity,
-                    });
+            match entry {
+                IndexFileEntry::Repository(repo) => {
+                    repository = Some(repo);
+                }
+                IndexFileEntry::Chunk(chunk) => {
+                    let similarity = self.cosine_similarity(query, &chunk.embedding);
+                    if similarity >= similarity_threshold {
+                        candidates.push(SearchResult {
+                            repository: repository.clone().or_fail()?,
+                            file_path: chunk.path,
+                            line: chunk.line,
+                            similarity,
+                        });
+                    }
                 }
             }
         }
@@ -124,7 +131,8 @@ impl IndexFile {
 
 #[derive(Debug, Clone)]
 pub struct SearchResult {
-    pub path: PathBuf,
+    pub repository: RepositoryEntry,
+    pub file_path: PathBuf,
     pub line: usize,
     pub similarity: f64,
 }
