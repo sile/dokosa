@@ -6,6 +6,7 @@ use crate::{
     chunker::Chunker,
     embedder::Embedder,
     git::GitRepository,
+    glob::GlobPathFilter,
     index_file::{ChunkEntry, IndexFile, IndexFileEntry, RepositoryEntry},
 };
 
@@ -59,7 +60,15 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                 }
 
                 (updated_files, removed_files) = git.diff_files(&repo.commit).or_fail()?;
+
+                let filter = GlobPathFilter {
+                    include_files: repo.include_files.clone(),
+                    exclude_files: repo.exclude_files.clone(),
+                };
                 for updated_file in &updated_files {
+                    if !filter.matches(updated_file) {
+                        continue;
+                    }
                     eprintln!("  => Updated file: {}", updated_file.display());
                 }
             }
