@@ -74,7 +74,7 @@ impl IndexFile {
         query: &Embedding,
         count: usize,
         similarity_threshold: f64,
-    ) -> orfail::Result<Vec<SearchResult>> {
+    ) -> orfail::Result<Vec<SearchMatch>> {
         let mut candidates = Vec::new();
         let mut repository = None;
 
@@ -88,7 +88,7 @@ impl IndexFile {
                 IndexFileEntry::Chunk(chunk) => {
                     let similarity = self.cosine_similarity(query, &chunk.embedding);
                     if similarity >= similarity_threshold {
-                        candidates.push(SearchResult {
+                        candidates.push(SearchMatch {
                             repository: repository.clone().or_fail()?,
                             file_path: chunk.path,
                             line: chunk.line,
@@ -130,11 +130,34 @@ impl IndexFile {
 }
 
 #[derive(Debug, Clone)]
-pub struct SearchResult {
+pub struct SearchMatch {
     pub repository: RepositoryEntry,
     pub file_path: PathBuf,
     pub line: usize,
     pub similarity: f64,
+}
+
+impl SearchMatch {
+    pub fn repository_file_path(&self) -> orfail::Result<PathBuf> {
+        Ok(self
+            .repository
+            .path
+            .join(&self.file_path)
+            .strip_prefix(self.repository.path.parent().or_fail()?)
+            .or_fail()?
+            .to_path_buf())
+    }
+
+    pub fn chunk_text(&self) -> orfail::Result<String> {
+        let full_path = self.repository.path.join(&self.file_path);
+        let text = std::fs::read_to_string(&full_path).or_fail()?;
+        Ok(text
+            .lines()
+            .skip(self.line)
+            .take(self.repository.chunk_window_size.get())
+            .collect::<Vec<_>>()
+            .join("\n"))
+    }
 }
 
 #[derive(Debug)]
