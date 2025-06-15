@@ -76,14 +76,23 @@ impl std::fmt::Display for GlobPathPattern {
         if !self.matches_bos {
             write!(f, "*")?;
         }
-        for (i, token) in self.tokens.iter().enumerate() {
-            if i > 0 {
-                write!(f, "*{token}")?;
-            } else {
-                write!(f, "{token}")?;
+
+        let mut empty = true;
+        let mut first = true;
+        for token in self.tokens.iter() {
+            if token.is_empty() {
+                continue;
             }
+            if first {
+                write!(f, "{token}")?;
+            } else {
+                write!(f, "*{token}")?;
+            }
+            first = false;
+            empty = false;
         }
-        if !self.matches_eos {
+
+        if !self.matches_eos && !empty {
             write!(f, "*")?;
         }
 
