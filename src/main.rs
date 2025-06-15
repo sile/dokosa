@@ -10,15 +10,35 @@ fn main() -> noargs::Result<()> {
     }
     noargs::HELP_FLAG.take_help(&mut args);
 
-    if noargs::cmd("add").take(&mut args).is_present() {
+    if noargs::cmd("add")
+        .doc("Add and index a Git repository for semantic search")
+        .take(&mut args)
+        .is_present()
+    {
         dokosa::subcommand_add::run(args)?;
-    } else if noargs::cmd("remove").take(&mut args).is_present() {
+    } else if noargs::cmd("remove")
+        .doc("Remove a Git repository from the index")
+        .take(&mut args)
+        .is_present()
+    {
         dokosa::subcommand_remove::run(args)?;
-    } else if noargs::cmd("list").take(&mut args).is_present() {
+    } else if noargs::cmd("list")
+        .doc("List all indexed repositories")
+        .take(&mut args)
+        .is_present()
+    {
         dokosa::subcommand_list::run(args)?;
-    } else if noargs::cmd("sync").take(&mut args).is_present() {
+    } else if noargs::cmd("sync")
+        .doc("Synchronize indexed repositories with their latest commits")
+        .take(&mut args)
+        .is_present()
+    {
         dokosa::subcommand_sync::run(args)?;
-    } else if noargs::cmd("search").take(&mut args).is_present() {
+    } else if noargs::cmd("search")
+        .doc("Search for semantically similar text chunks")
+        .take(&mut args)
+        .is_present()
+    {
         dokosa::subcommand_search::run(args)?;
     } else if let Some(help) = args.finish()? {
         print!("{help}");
