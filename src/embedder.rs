@@ -69,16 +69,8 @@ impl Embedder {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Default, Clone)]
 pub struct Embedding(pub Vec<f64>);
-
-impl Eq for Embedding {}
-
-impl Ord for Embedding {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).expect("imfallible")
-    }
-}
 
 impl nojson::DisplayJson for Embedding {
     fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
