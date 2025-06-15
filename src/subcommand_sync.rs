@@ -64,12 +64,14 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                 (updated_files, removed_files) = git.diff_files(&repo.commit).or_fail()?;
 
                 let new_commit = git.commit_hash().or_fail()?;
-                if repo.commit != new_commit {
-                    eprintln!("  => New commit: {}", new_commit);
-                    repo.commit = new_commit;
-                    if let Some(temp) = &temp_index_file {
-                        temp.append_repository(&repo).or_fail()?;
-                    }
+                if repo.commit == new_commit {
+                    continue;
+                }
+
+                eprintln!("  => New commit: {}", new_commit);
+                repo.commit = new_commit;
+                if let Some(temp) = &temp_index_file {
+                    temp.append_repository(&repo).or_fail()?;
                 }
 
                 let filter = GlobPathFilter {
