@@ -91,13 +91,14 @@ impl IndexFile {
                 }
                 IndexFileEntry::Chunk(chunk) => {
                     let repository = repository.as_ref().or_fail()?;
-                    if !filter.should_include(repository.path.join(&chunk.path)) {
+                    if !filter.matches(repository.path.join(&chunk.path)) {
                         continue;
                     }
                     let similarity = self.cosine_similarity(query, &chunk.embedding);
                     if similarity >= similarity_threshold {
                         candidates.push(MatchedChunk {
-                            repository: repository.clone(),
+                            repository_path: repository.path.clone(),
+                            chunk_window_size: repository.chunk_window_size,
                             file_path: chunk.path,
                             line: chunk.line,
                             similarity,
@@ -139,7 +140,8 @@ impl IndexFile {
 
 #[derive(Debug, Clone)]
 pub struct MatchedChunk {
-    pub repository: RepositoryEntry,
+    pub repository_path: PathBuf,
+    pub chunk_window_size: NonZeroUsize,
     pub file_path: PathBuf,
     pub line: usize,
     pub similarity: f64,
@@ -148,21 +150,20 @@ pub struct MatchedChunk {
 impl MatchedChunk {
     pub fn repository_file_path(&self) -> orfail::Result<PathBuf> {
         Ok(self
-            .repository
-            .path
+            .repository_path
             .join(&self.file_path)
-            .strip_prefix(self.repository.path.parent().or_fail()?)
+            .strip_prefix(self.repository_path.parent().or_fail()?)
             .or_fail()?
             .to_path_buf())
     }
 
     pub fn chunk_text(&self) -> orfail::Result<String> {
-        let full_path = self.repository.path.join(&self.file_path);
+        let full_path = self.repository_path.join(&self.file_path);
         let text = std::fs::read_to_string(&full_path).or_fail()?;
         Ok(text
             .lines()
             .skip(self.line)
-            .take(self.repository.chunk_window_size.get())
+            .take(self.chunk_window_size.get())
             .collect::<Vec<_>>()
             .join("\n"))
     }

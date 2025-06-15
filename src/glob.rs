@@ -7,7 +7,7 @@ pub struct GlobPathFilter {
 }
 
 impl GlobPathFilter {
-    pub fn should_include<P: AsRef<Path>>(&self, path: P) -> bool {
+    pub fn matches<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
         // Check if path matches any exclude pattern

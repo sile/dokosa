@@ -103,7 +103,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
     for file_path in repo.files().or_fail()? {
         let abs_file_path = repo.root_dir.join(&file_path);
-        if !filter.should_include(&abs_file_path) {
+        if !filter.matches(&abs_file_path) {
             eprintln!("Excluded file: {}", file_path.display());
             continue;
         }
