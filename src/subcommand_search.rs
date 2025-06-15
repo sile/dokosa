@@ -58,7 +58,6 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     {
         filter.exclude_files.push(GlobPathPattern::new(a.value()));
     }
->>>>>>> 979102a (Add GlobPathFilter struct to consolidate include/exclude pattern filtering)
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
