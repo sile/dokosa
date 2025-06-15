@@ -14,22 +14,28 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let index_file_path: PathBuf = noargs::opt("index-file")
         .short('i')
         .ty("PATH")
+        .doc("Path to the index file to synchronize")
         .env("DOKOSA_INDEX_FILE")
         .example("/path/to/.dokosa")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let api_key: String = noargs::opt("openai-api-key")
         .ty("STRING")
+        .doc("OpenAI API key for generating embeddings")
         .example("YOUR_API_KEY")
         .env("OPENAI_API_KEY")
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let model: String = noargs::opt("embedding-model")
         .ty("STRING")
+        .doc("OpenAI embedding model to use for text vectorization")
         .default("text-embedding-3-small")
         .take(&mut args)
         .then(|a| a.value().parse())?;
-    let dry_run = noargs::flag("dry-run").take(&mut args).is_present();
+    let dry_run = noargs::flag("dry-run")
+        .doc("Show what would be done without actually modifying the index")
+        .take(&mut args)
+        .is_present();
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());

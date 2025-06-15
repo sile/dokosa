@@ -8,6 +8,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let index_file_path: PathBuf = noargs::opt("index-file")
         .short('i')
         .ty("PATH")
+        .doc("Path to the index file to read repository and chunk data from")
         .env("DOKOSA_INDEX_FILE")
         .example("/path/to/.dokosa")
         .take(&mut args)
