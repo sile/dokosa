@@ -68,6 +68,65 @@ impl IndexFile {
             _ => None,
         })
     }
+
+    pub fn search(
+        &self,
+        query: &Embedding,
+        count: usize,
+        similarity_threshold: f64,
+    ) -> orfail::Result<Vec<SearchResult>> {
+        let mut candidates = Vec::new();
+
+        // Collect all chunk entries with their similarity scores
+        for entry_result in self.entries() {
+            let entry = entry_result.or_fail()?;
+            if let IndexFileEntry::Chunk(chunk) = entry {
+                let similarity = self.cosine_similarity(query, &chunk.embedding);
+                if similarity >= similarity_threshold {
+                    candidates.push(SearchResult {
+                        path: chunk.path,
+                        line: chunk.line,
+                        similarity,
+                    });
+                }
+            }
+        }
+
+        // Sort by similarity (highest first) and take top count
+        candidates.sort_by(|a, b| {
+            b.similarity
+                .partial_cmp(&a.similarity)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        Ok(candidates.into_iter().take(count).collect())
+    }
+
+    fn cosine_similarity(&self, a: &Embedding, b: &Embedding) -> f64 {
+        let a_vec = &a.0;
+        let b_vec = &b.0;
+
+        if a_vec.len() != b_vec.len() {
+            return 0.0;
+        }
+
+        let dot_product: f64 = a_vec.iter().zip(b_vec.iter()).map(|(x, y)| x * y).sum();
+        let norm_a: f64 = a_vec.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm_b: f64 = b_vec.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+        if norm_a == 0.0 || norm_b == 0.0 {
+            return 0.0;
+        }
+
+        dot_product / (norm_a * norm_b)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchResult {
+    pub path: PathBuf,
+    pub line: usize,
+    pub similarity: f64,
 }
 
 #[derive(Debug)]
