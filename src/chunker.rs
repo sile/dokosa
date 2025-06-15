@@ -50,7 +50,7 @@ where
 {
     fn fmt(&self, f: &mut nojson::JsonFormatter<'_, '_>) -> std::fmt::Result {
         f.object(|f| {
-            f.member("line", &self.line)?;
+            f.member("line", self.line)?;
             f.member("data", &self.data)
         })
     }

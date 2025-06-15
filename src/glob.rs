@@ -118,7 +118,7 @@ impl<'text> nojson::FromRawJsonValue<'text> for GlobPathPattern {
     fn from_raw_json_value(
         value: nojson::RawJsonValue<'text, '_>,
     ) -> Result<Self, nojson::JsonParseError> {
-        value.to_unquoted_string_str().map(|s| Self::new(&*s))
+        value.to_unquoted_string_str().map(|s| Self::new(&s))
     }
 }
 

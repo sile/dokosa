@@ -18,7 +18,7 @@ impl GitRepository {
 
         // Verify it's a valid Git repository and get the root directory
         let output = Command::new("git")
-            .args(&[
+            .args([
                 "-C",
                 path.to_str().unwrap_or(""),
                 "rev-parse",
@@ -47,7 +47,7 @@ impl GitRepository {
     /// Get the current commit hash (HEAD)
     pub fn commit_hash(&self) -> orfail::Result<String> {
         let output = Command::new("git")
-            .args(&[
+            .args([
                 "-C",
                 self.root_dir.to_str().unwrap_or(""),
                 "rev-parse",
@@ -74,7 +74,7 @@ impl GitRepository {
     /// Get all files tracked by Git in this repository
     pub fn files(&self) -> orfail::Result<Vec<PathBuf>> {
         let output = Command::new("git")
-            .args(&["-C", self.root_dir.to_str().unwrap_or(""), "ls-files"])
+            .args(["-C", self.root_dir.to_str().unwrap_or(""), "ls-files"])
             .output()
             .or_fail_with(|e| format!("Failed to execute git ls-files: {e}"))?;
 
@@ -100,7 +100,7 @@ impl GitRepository {
         old_commit_hash: &str,
     ) -> orfail::Result<(Vec<PathBuf>, Vec<PathBuf>)> {
         let output = Command::new("git")
-            .args(&[
+            .args([
                 "-C",
                 self.root_dir.to_str().unwrap_or(""),
                 "diff",
