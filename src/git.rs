@@ -94,4 +94,67 @@ impl GitRepository {
 
         Ok(files)
     }
+
+    pub fn diff_files(
+        &self,
+        old_commit_hash: &str,
+    ) -> orfail::Result<(Vec<PathBuf>, Vec<PathBuf>)> {
+        let output = Command::new("git")
+            .args(&[
+                "-C",
+                self.root_dir.to_str().unwrap_or(""),
+                "diff",
+                "--name-status",
+                old_commit_hash,
+                "HEAD",
+            ])
+            .output()
+            .or_fail_with(|e| format!("Failed to execute git diff --name-status: {e}"))?;
+
+        output.status.success().or_fail_with(|()| {
+            format!(
+                "Git diff command failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )
+        })?;
+
+        let diff_output = String::from_utf8(output.stdout).or_fail()?;
+        let mut added_or_updated = Vec::new();
+        let mut removed = Vec::new();
+
+        for line in diff_output.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            let parts: Vec<&str> = line.splitn(2, '\t').collect();
+            if parts.len() != 2 {
+                continue;
+            }
+
+            let status = parts[0];
+            let file_path = PathBuf::from(parts[1]);
+
+            match status.chars().next() {
+                Some('A') | Some('M') | Some('T') => {
+                    // Added, Modified, or Type changed
+                    added_or_updated.push(file_path);
+                }
+                Some('D') => {
+                    // Deleted
+                    removed.push(file_path);
+                }
+                Some('R') | Some('C') => {
+                    // Renamed or Copied - treat as added/updated
+                    added_or_updated.push(file_path);
+                }
+                _ => {
+                    // Other statuses (like 'U' for unmerged) - treat as added/updated
+                    added_or_updated.push(file_path);
+                }
+            }
+        }
+
+        Ok((added_or_updated, removed))
+    }
 }
