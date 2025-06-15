@@ -1,5 +1,36 @@
 use std::path::Path;
 
+#[derive(Debug, Default)]
+pub struct GlobPathFilter {
+    pub include_files: Vec<GlobPathPattern>,
+    pub exclude_files: Vec<GlobPathPattern>,
+}
+
+impl GlobPathFilter {
+    pub fn should_include<P: AsRef<Path>>(&self, path: P) -> bool {
+        let path = path.as_ref();
+
+        // Check if path matches any exclude pattern
+        if self
+            .exclude_files
+            .iter()
+            .any(|pattern| pattern.matches(path))
+        {
+            return false;
+        }
+
+        // If no include patterns are specified, include all (that aren't excluded)
+        if self.include_files.is_empty() {
+            return true;
+        }
+
+        // Check if path matches at least one include pattern
+        self.include_files
+            .iter()
+            .any(|pattern| pattern.matches(path))
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct GlobPathPattern {
     tokens: Vec<String>,

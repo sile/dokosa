@@ -6,7 +6,7 @@ use crate::{
     chunker::Chunker,
     embedder::Embedder,
     git::GitRepository,
-    glob::GlobPathPattern,
+    glob::{GlobPathFilter, GlobPathPattern},
     index_file::{ChunkEntry, IndexFile, RepositoryEntry},
 };
 
@@ -46,26 +46,23 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let dry_run = noargs::flag("dry-run").take(&mut args).is_present();
-    let mut include_files = Vec::new();
+
+    let mut filter = GlobPathFilter::default();
     while let Some(a) = noargs::opt("include-files")
         .short('I')
         .ty("PATTERN")
         .take(&mut args)
         .present()
     {
-        include_files.push(GlobPathPattern::new(a.value()));
+        filter.include_files.push(GlobPathPattern::new(a.value()));
     }
-    if include_files.is_empty() {
-        include_files.push(GlobPathPattern::new("*"));
-    }
-    let mut exclude_files = Vec::new();
     while let Some(a) = noargs::opt("exclude-files")
         .short('E')
         .ty("PATTERN")
         .take(&mut args)
         .present()
     {
-        exclude_files.push(GlobPathPattern::new(a.value()));
+        filter.exclude_files.push(GlobPathPattern::new(a.value()));
     }
     if let Some(help) = args.finish()? {
         print!("{help}");
@@ -95,8 +92,8 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                 commit,
                 chunk_window_size,
                 chunk_step_size,
-                include_files: include_files.clone(),
-                exclude_files: exclude_files.clone(),
+                include_files: filter.include_files.clone(),
+                exclude_files: filter.exclude_files.clone(),
             })
             .or_fail()?;
     }
@@ -106,9 +103,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
     for file_path in repo.files().or_fail()? {
         let abs_file_path = repo.root_dir.join(&file_path);
-        let excluded = exclude_files.iter().any(|p| p.matches(&abs_file_path))
-            || include_files.iter().all(|p| !p.matches(&abs_file_path));
-        if excluded {
+        if !filter.should_include(&abs_file_path) {
             eprintln!("Excluded file: {}", file_path.display());
             continue;
         }

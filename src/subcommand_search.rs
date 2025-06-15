@@ -2,7 +2,11 @@ use std::{io::Read, path::PathBuf};
 
 use orfail::OrFail;
 
-use crate::{embedder::Embedder, index_file::IndexFile};
+use crate::{
+    embedder::Embedder,
+    glob::{GlobPathFilter, GlobPathPattern},
+    index_file::IndexFile,
+};
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     let index_file_path: PathBuf = noargs::opt("index-file")
@@ -37,6 +41,24 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .take(&mut args)
         .then(|a| a.value().parse())?;
     let strip_text: bool = noargs::flag("strip-text").take(&mut args).is_present();
+    let mut filter = GlobPathFilter::default();
+    while let Some(a) = noargs::opt("include-files")
+        .short('I')
+        .ty("PATTERN")
+        .take(&mut args)
+        .present()
+    {
+        filter.include_files.push(GlobPathPattern::new(a.value()));
+    }
+    while let Some(a) = noargs::opt("exclude-files")
+        .short('E')
+        .ty("PATTERN")
+        .take(&mut args)
+        .present()
+    {
+        filter.exclude_files.push(GlobPathPattern::new(a.value()));
+    }
+>>>>>>> 979102a (Add GlobPathFilter struct to consolidate include/exclude pattern filtering)
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
@@ -50,7 +72,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
     let embedding = embedder.embed(&[query]).or_fail()?.remove(0);
     let matched_chunks = index_file
-        .search(&embedding, count, similarity_threshold)
+        .search(&embedding, count, similarity_threshold, &filter)
         .or_fail()?;
 
     let mut chunks = Vec::new();

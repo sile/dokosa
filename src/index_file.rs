@@ -6,7 +6,10 @@ use std::{
 
 use orfail::OrFail;
 
-use crate::{embedder::Embedding, glob::GlobPathPattern};
+use crate::{
+    embedder::Embedding,
+    glob::{GlobPathFilter, GlobPathPattern},
+};
 
 #[derive(Debug)]
 pub struct IndexFile {
@@ -74,6 +77,7 @@ impl IndexFile {
         query: &Embedding,
         count: usize,
         similarity_threshold: f64,
+        filter: &GlobPathFilter,
     ) -> orfail::Result<Vec<MatchedChunk>> {
         let mut candidates = Vec::new();
         let mut repository = None;
@@ -86,10 +90,14 @@ impl IndexFile {
                     repository = Some(repo);
                 }
                 IndexFileEntry::Chunk(chunk) => {
+                    let repository = repository.as_ref().or_fail()?;
+                    if !filter.should_include(repository.path.join(&chunk.path)) {
+                        continue;
+                    }
                     let similarity = self.cosine_similarity(query, &chunk.embedding);
                     if similarity >= similarity_threshold {
                         candidates.push(MatchedChunk {
-                            repository: repository.clone().or_fail()?,
+                            repository: repository.clone(),
                             file_path: chunk.path,
                             line: chunk.line,
                             similarity,
