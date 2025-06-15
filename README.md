@@ -7,7 +7,7 @@ dokosa
 
 A command-line semantic search tool that indexes and searches local Git repositories using vector embeddings.
 
-"dokosa" means "where is it?" in Japanese.
+"dokosa" (どこさ？) is Japanese for "where is it?".
 
 ## Features
 
