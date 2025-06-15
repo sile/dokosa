@@ -2,6 +2,13 @@
 name = "dokosa"
 version = "0.1.0"
 edition = "2024"
+authors = ["Takeru Ohta <phjgt308@gmail.com>"]
+license = "MIT"
+description = "A command-line semantic search tool that indexes and searches local Git repositories using vector embeddings"
+homepage = "https://github.com/sile/dokosa"
+repository = "https://github.com/sile/dokosa"
+readme = "README.md"
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 noargs = "0.3.2"
