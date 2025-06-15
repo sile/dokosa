@@ -32,7 +32,9 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
             }
             IndexFileEntry::Chunk(chunk) => {
                 chunk_count += 1;
-                println!("  Chunk: {} (line {})", chunk.path.display(), chunk.line);
+                if chunk.line == 0 {
+                    println!("  File: {}", chunk.path.display());
+                }
             }
         }
     }

@@ -63,6 +63,9 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
                 let new_commit = git.commit_hash().or_fail()?;
                 if repo.commit == new_commit {
+                    if let Some(temp) = &temp_index_file {
+                        temp.append_repository(&repo).or_fail()?;
+                    }
                     continue;
                 }
                 eprintln!("  => New commit: {}", new_commit);
