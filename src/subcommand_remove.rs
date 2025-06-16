@@ -8,11 +8,6 @@ use crate::{
 };
 
 pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
-    let repo_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
-        .doc("Path to the Git repository to remove from the index")
-        .example("/path/to/git/repository/")
-        .take(&mut args)
-        .then(|a| a.value().parse())?;
     let index_file_path: PathBuf = noargs::opt("index-file")
         .short('i')
         .ty("PATH")
@@ -25,6 +20,11 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .doc("Show what would be done without actually modifying the index")
         .take(&mut args)
         .is_present();
+    let repo_path: PathBuf = noargs::arg("GIT_REPOSITORY_PATH")
+        .doc("Path to the Git repository to remove from the index")
+        .example("/path/to/git/repository/")
+        .take(&mut args)
+        .then(|a| a.value().parse())?;
     if let Some(help) = args.finish()? {
         print!("{help}");
         return Ok(());
