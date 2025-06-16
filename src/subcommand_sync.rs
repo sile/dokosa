@@ -105,6 +105,9 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                     else {
                         continue;
                     };
+                    if content.is_empty() {
+                        continue;
+                    }
 
                     let mut chunks = chunker.apply(&content);
                     let inputs = chunks
