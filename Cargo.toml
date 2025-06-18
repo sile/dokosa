@@ -11,6 +11,6 @@ readme = "README.md"
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-noargs = "0.3.2"
+noargs = "0.4.0"
 nojson = "0.1.2"
 orfail = "1.1.0"
