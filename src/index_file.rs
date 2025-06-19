@@ -80,6 +80,7 @@ impl IndexFile {
         filter: &GlobPathFilter,
     ) -> orfail::Result<Vec<MatchedChunk>> {
         let mut candidates = Vec::new();
+        let mut lowest_similarity = similarity_threshold.next_down();
         let mut repository = None;
 
         // Collect all chunk entries with their similarity scores
@@ -95,7 +96,7 @@ impl IndexFile {
                         continue;
                     }
                     let similarity = self.cosine_similarity(query, &chunk.embedding);
-                    if similarity >= similarity_threshold {
+                    if similarity > lowest_similarity {
                         candidates.push(MatchedChunk {
                             repository_path: repository.path.clone(),
                             chunk_window_size: repository.chunk_window_size,
@@ -103,19 +104,23 @@ impl IndexFile {
                             line: chunk.line,
                             similarity,
                         });
+
+                        candidates.sort_by(|a, b| {
+                            b.similarity
+                                .partial_cmp(&a.similarity)
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                        });
+
+                        if candidates.len() > count {
+                            let lowest = candidates.pop().expect("infallible");
+                            lowest_similarity = lowest.similarity;
+                        }
                     }
                 }
             }
         }
 
-        // Sort by similarity (highest first) and take top count
-        candidates.sort_by(|a, b| {
-            b.similarity
-                .partial_cmp(&a.similarity)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-
-        Ok(candidates.into_iter().take(count).collect())
+        Ok(candidates)
     }
 
     fn cosine_similarity(&self, a: &Embedding, b: &Embedding) -> f64 {
