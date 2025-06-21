@@ -85,11 +85,12 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
         .search(&embedding, count, similarity_threshold, &filter)
         .or_fail()?;
 
+    let current_dir = std::env::current_dir().or_fail()?;
     let mut chunks = Vec::new();
     for chunk in matched_chunks {
         chunks.push(SimilarChunk {
             similarity: chunk.similarity,
-            path: chunk.repository_file_path().or_fail()?,
+            path: chunk.relative_file_path(&current_dir),
             line: chunk.line,
             text: if strip_text {
                 "".to_owned()

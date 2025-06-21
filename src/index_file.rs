@@ -153,13 +153,32 @@ pub struct MatchedChunk {
 }
 
 impl MatchedChunk {
-    pub fn repository_file_path(&self) -> orfail::Result<PathBuf> {
-        Ok(self
-            .repository_path
-            .join(&self.file_path)
-            .strip_prefix(self.repository_path.parent().or_fail()?)
-            .or_fail()?
-            .to_path_buf())
+    pub fn relative_file_path(&self, current_dir: &Path) -> PathBuf {
+        let full_path = self.repository_path.join(&self.file_path);
+
+        if let Ok(relative_path) = full_path.strip_prefix(current_dir) {
+            // The file is within the current directory tree, return the direct relative path
+            return relative_path.to_path_buf();
+        }
+
+        // The file is outside the current directory tree, compute path via common ancestor
+        let common_len = current_dir
+            .components()
+            .zip(full_path.components())
+            .take_while(|(a, b)| a == b)
+            .count();
+
+        if common_len == 0 {
+            // No common ancestor
+            return full_path;
+        }
+
+        current_dir
+            .components()
+            .skip(common_len)
+            .map(|_| std::path::Component::ParentDir)
+            .chain(full_path.components().skip(common_len))
+            .collect()
     }
 
     pub fn chunk_text(&self) -> orfail::Result<String> {
