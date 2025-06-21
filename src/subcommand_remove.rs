@@ -54,14 +54,14 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                     removing = true;
                 } else {
                     removing = false;
-                    index_file.append_repository(&x).or_fail()?;
+                    temp_index_file.append_repository(&x).or_fail()?;
                 }
             }
             IndexFileEntry::Chunk(x) => {
                 if removing {
                     continue;
                 }
-                index_file.append_chunk(&x).or_fail()?;
+                temp_index_file.append_chunk(&x).or_fail()?;
             }
         }
     }
