@@ -156,7 +156,7 @@ impl MatchedChunk {
     pub fn relative_file_path(&self, current_dir: &Path) -> PathBuf {
         let full_path = self.repository_path.join(&self.file_path);
 
-        if let Ok(relative_path) = full_path.strip_prefix(&current_dir) {
+        if let Ok(relative_path) = full_path.strip_prefix(current_dir) {
             // The file is within the current directory tree, return the direct relative path
             return relative_path.to_path_buf();
         }
