@@ -183,7 +183,8 @@ impl MatchedChunk {
 
     pub fn chunk_text(&self) -> orfail::Result<String> {
         let full_path = self.repository_path.join(&self.file_path);
-        let text = std::fs::read_to_string(&full_path).or_fail()?;
+        let text = std::fs::read_to_string(&full_path)
+            .or_fail_with(|e| format!("{e}: {}", full_path.display()))?;
         Ok(text
             .lines()
             .skip(self.line)
