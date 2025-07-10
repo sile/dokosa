@@ -56,17 +56,16 @@ where
     }
 }
 
-impl<'text, T> nojson::FromRawJsonValue<'text> for Chunk<T>
+impl<'text, 'raw, T> TryFrom<nojson::RawJsonValue<'text, 'raw>> for Chunk<T>
 where
-    T: nojson::FromRawJsonValue<'text>,
+    T: TryFrom<nojson::RawJsonValue<'text, 'raw>, Error = nojson::JsonParseError>,
 {
-    fn from_raw_json_value(
-        value: nojson::RawJsonValue<'text, '_>,
-    ) -> Result<Self, nojson::JsonParseError> {
-        let ([line, data], []) = value.to_fixed_object(["line", "data"], [])?;
+    type Error = nojson::JsonParseError;
+
+    fn try_from(value: nojson::RawJsonValue<'text, 'raw>) -> Result<Self, Self::Error> {
         Ok(Chunk {
-            line: line.try_to()?,
-            data: data.try_to()?,
+            line: value.to_member("line")?.required()?.try_into()?,
+            data: value.to_member("data")?.required()?.try_into()?,
         })
     }
 }

@@ -39,30 +39,34 @@ impl Embedder {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(orfail::Failure::new(format!(
-                "curl command failed: {}",
-                stderr
+                "curl command failed: {stderr}"
             )));
         }
 
         let response = String::from_utf8(output.stdout)
             .or_fail_with(|e| format!("Failed to parse curl response as UTF-8: {e}"))?;
         let response = nojson::RawJson::parse(&response).or_fail()?;
-        let ([data], []) = response
+        let data = response
             .value()
-            .to_fixed_object(["data"], [])
+            .to_member("data")
+            .or_fail()?
+            .required()
             .or_fail_with(|e| {
                 format!("Unexpected embeddings API response: {e}\n\nJSON:\n{response}\n")
             })?;
 
         let mut embeddings = vec![Embedding::default(); input_texts.len()];
         for object in data.to_array().or_fail()? {
-            let ([index, embedding], []) = object
-                .to_fixed_object(["index", "embedding"], [])
+            let index = object.to_member("index").or_fail()?.required().or_fail()?;
+            let embedding = object
+                .to_member("embedding")
+                .or_fail()?
+                .required()
                 .or_fail()?;
-            let i: usize = index.try_to().or_fail()?;
+            let i = usize::try_from(index).or_fail()?;
             (i < embeddings.len()).or_fail()?;
 
-            embeddings[i] = embedding.try_to().or_fail()?;
+            embeddings[i] = Embedding::try_from(embedding).or_fail()?;
         }
 
         Ok(embeddings)
@@ -78,10 +82,10 @@ impl nojson::DisplayJson for Embedding {
     }
 }
 
-impl<'text> nojson::FromRawJsonValue<'text> for Embedding {
-    fn from_raw_json_value(
-        value: nojson::RawJsonValue<'text, '_>,
-    ) -> Result<Self, nojson::JsonParseError> {
-        value.try_to().map(Self)
+impl<'text> TryFrom<nojson::RawJsonValue<'text, '_>> for Embedding {
+    type Error = nojson::JsonParseError;
+
+    fn try_from(value: nojson::RawJsonValue<'text, '_>) -> Result<Self, Self::Error> {
+        value.try_into().map(Self)
     }
 }

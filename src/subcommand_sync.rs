@@ -74,7 +74,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                     }
                     continue;
                 }
-                eprintln!("  => New commit: {}", new_commit);
+                eprintln!("  => New commit: {new_commit}");
 
                 (updated_files, removed_files) = git.diff_files(&repo.commit).or_fail()?;
 
@@ -101,7 +101,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
                     let abs_file_path = repo.path.join(updated_file);
                     let Ok(content) = std::fs::read_to_string(&abs_file_path)
                         .or_fail()
-                        .inspect_err(|e| eprintln!("  Failed to read file: {}", e))
+                        .inspect_err(|e| eprintln!("  Failed to read file: {e}"))
                     else {
                         continue;
                     };
