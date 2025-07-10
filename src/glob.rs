@@ -114,10 +114,10 @@ impl nojson::DisplayJson for GlobPathPattern {
     }
 }
 
-impl<'text> nojson::FromRawJsonValue<'text> for GlobPathPattern {
-    fn from_raw_json_value(
-        value: nojson::RawJsonValue<'text, '_>,
-    ) -> Result<Self, nojson::JsonParseError> {
+impl<'text> TryFrom<nojson::RawJsonValue<'text, '_>> for GlobPathPattern {
+    type Error = nojson::JsonParseError;
+
+    fn try_from(value: nojson::RawJsonValue<'text, '_>) -> Result<Self, Self::Error> {
         value.to_unquoted_string_str().map(|s| Self::new(&s))
     }
 }

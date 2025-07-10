@@ -241,14 +241,14 @@ impl nojson::DisplayJson for IndexFileEntry {
     }
 }
 
-impl<'text> nojson::FromRawJsonValue<'text> for IndexFileEntry {
-    fn from_raw_json_value(
-        value: nojson::RawJsonValue<'text, '_>,
-    ) -> Result<Self, nojson::JsonParseError> {
-        let ([entry_type], []) = value.to_fixed_object(["type"], [])?;
+impl<'text> TryFrom<nojson::RawJsonValue<'text, '_>> for IndexFileEntry {
+    type Error = nojson::JsonParseError;
+
+    fn try_from(value: nojson::RawJsonValue<'text, '_>) -> Result<Self, Self::Error> {
+        let entry_type = value.to_member("type")?.required()?;
         match entry_type.to_unquoted_string_str()?.as_ref() {
-            "repository" => Ok(IndexFileEntry::Repository(value.try_to()?)),
-            "chunk" => Ok(IndexFileEntry::Chunk(value.try_to()?)),
+            "repository" => Ok(IndexFileEntry::Repository(value.try_into()?)),
+            "chunk" => Ok(IndexFileEntry::Chunk(value.try_into()?)),
             ty => Err(nojson::JsonParseError::invalid_value(
                 value,
                 format!(
@@ -284,39 +284,24 @@ impl nojson::DisplayJson for RepositoryEntry {
     }
 }
 
-impl<'text> nojson::FromRawJsonValue<'text> for RepositoryEntry {
-    fn from_raw_json_value(
-        value: nojson::RawJsonValue<'text, '_>,
-    ) -> Result<Self, nojson::JsonParseError> {
-        let (
-            [
-                path,
-                commit,
-                chunk_window_size,
-                chunk_step_size,
-                include_files,
-                exclude_files,
-            ],
-            [],
-        ) = value.to_fixed_object(
-            [
-                "path",
-                "commit",
-                "chunk_window_size",
-                "chunk_step_size",
-                "include_files",
-                "exclude_files",
-            ],
-            [],
-        )?;
+impl<'text> TryFrom<nojson::RawJsonValue<'text, '_>> for RepositoryEntry {
+    type Error = nojson::JsonParseError;
+
+    fn try_from(value: nojson::RawJsonValue<'text, '_>) -> Result<Self, Self::Error> {
+        let path = value.to_member("path")?.required()?;
+        let commit = value.to_member("commit")?.required()?;
+        let chunk_window_size = value.to_member("chunk_window_size")?.required()?;
+        let chunk_step_size = value.to_member("chunk_step_size")?.required()?;
+        let include_files = value.to_member("include_files")?.required()?;
+        let exclude_files = value.to_member("exclude_files")?.required()?;
 
         Ok(Self {
-            path: path.try_to()?,
-            commit: commit.try_to()?,
-            chunk_window_size: chunk_window_size.try_to()?,
-            chunk_step_size: chunk_step_size.try_to()?,
-            include_files: include_files.try_to()?,
-            exclude_files: exclude_files.try_to()?,
+            path: path.try_into()?,
+            commit: commit.try_into()?,
+            chunk_window_size: chunk_window_size.try_into()?,
+            chunk_step_size: chunk_step_size.try_into()?,
+            include_files: include_files.try_into()?,
+            exclude_files: exclude_files.try_into()?,
         })
     }
 }
@@ -339,16 +324,18 @@ impl nojson::DisplayJson for ChunkEntry {
     }
 }
 
-impl<'text> nojson::FromRawJsonValue<'text> for ChunkEntry {
-    fn from_raw_json_value(
-        value: nojson::RawJsonValue<'text, '_>,
-    ) -> Result<Self, nojson::JsonParseError> {
-        let ([path, line, embedding], []) =
-            value.to_fixed_object(["path", "line", "embedding"], [])?;
+impl<'text> TryFrom<nojson::RawJsonValue<'text, '_>> for ChunkEntry {
+    type Error = nojson::JsonParseError;
+
+    fn try_from(value: nojson::RawJsonValue<'text, '_>) -> Result<Self, Self::Error> {
+        let path = value.to_member("path")?.required()?;
+        let line = value.to_member("line")?.required()?;
+        let embedding = value.to_member("embedding")?.required()?;
+
         Ok(Self {
-            path: path.try_to()?,
-            line: line.try_to()?,
-            embedding: embedding.try_to()?,
+            path: path.try_into()?,
+            line: line.try_into()?,
+            embedding: embedding.try_into()?,
         })
     }
 }
