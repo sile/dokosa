@@ -252,8 +252,7 @@ impl<'text> TryFrom<nojson::RawJsonValue<'text, '_>> for IndexFileEntry {
             ty => Err(nojson::JsonParseError::invalid_value(
                 value,
                 format!(
-                    "Invalid type field: expected 'repository' or 'chunk', found '{}'",
-                    ty
+                    "Invalid type field: expected 'repository' or 'chunk', found '{ty}'"
                 ),
             )),
         }

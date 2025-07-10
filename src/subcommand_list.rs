@@ -41,8 +41,8 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     }
 
     println!("\nSummary:");
-    println!("  Repositories: {}", repo_count);
-    println!("  Chunks: {}", chunk_count);
+    println!("  Repositories: {repo_count}");
+    println!("  Chunks: {chunk_count}");
 
     Ok(())
 }

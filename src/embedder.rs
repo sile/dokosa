@@ -39,8 +39,7 @@ impl Embedder {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(orfail::Failure::new(format!(
-                "curl command failed: {}",
-                stderr
+                "curl command failed: {stderr}"
             )));
         }
 

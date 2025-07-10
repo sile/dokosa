@@ -95,7 +95,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
     }
 
     let commit = repo.commit_hash().or_fail()?;
-    eprintln!("Commit hash: {}", commit);
+    eprintln!("Commit hash: {commit}");
 
     if !dry_run {
         index_file
@@ -127,7 +127,7 @@ pub fn run(mut args: noargs::RawArgs) -> noargs::Result<()> {
 
         let Ok(content) = std::fs::read_to_string(&abs_file_path)
             .or_fail()
-            .inspect_err(|e| eprintln!("  Failed to read file: {}", e))
+            .inspect_err(|e| eprintln!("  Failed to read file: {e}"))
         else {
             continue;
         };
